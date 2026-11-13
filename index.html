@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vr para celular</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #000000;
+        }
+
+        #tela {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .olho {
+            width: 50%;
+            height: 100%;
+            background-color: #ff0000;
+        }
+
+        .olho:nth-child(2) {
+            background-color: #0084ff;
+        }
+
+        .olho video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="tela">
+        <div class="olho"><video id="cam" autoplay playsinline muted></video></div>
+        <div class="olho"><video id="cam2" autoplay playsinline muted></video></div>
+    </div>
+
+    <script>
+        const video = document.getElementById("cam");
+        const video2 = document.getElementById("cam2");
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+                video2.srcObject = stream;
+            })
+            .catch((error) => {
+                console.error("Não foi possível acessar a câmera:", error);
+            });
+    </script>
+</body>
+
+</html>
