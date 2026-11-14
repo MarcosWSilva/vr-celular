@@ -1,63 +1,422 @@
+
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vr para celular</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #000000;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#05070c">
+<title>Mobile Quest</title>
 
-        #tela {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        .olho {
-            width: 50%;
-            height: 100%;
-            background-color: #ff0000;
-        }
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #05070c;
+    color: white;
+    font-family: Arial, sans-serif;
+}
 
-        .olho:nth-child(2) {
-            background-color: #0084ff;
-        }
+#tela {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    background: black;
+}
 
-        .olho video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-    </style>
+.olho {
+    position: relative;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    background: black;
+}
+
+.olho video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: translateX(var(--deslocamento, 0px)) scale(var(--zoom, 1));
+}
+
+#olho2 video {
+    transform: translateX(calc(var(--deslocamento, 0px) * -1))
+               scale(var(--zoom, 1));
+}
+
+#interface {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 22px;
+    background: linear-gradient(
+        180deg,
+        rgba(0,0,0,.88),
+        rgba(0,0,0,.15) 45%,
+        rgba(0,0,0,.85)
+    );
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #64d9ff;
+}
+
+.status {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.painel {
+    width: min(100%, 380px);
+    margin: auto;
+    padding: 22px;
+    border: 1px solid #263849;
+    border-radius: 16px;
+    background: rgba(8, 15, 25, .94);
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+button {
+    width: 100%;
+    padding: 13px;
+    margin-top: 10px;
+    border: 1px solid #254a62;
+    border-radius: 8px;
+    background: #10283b;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+button:active {
+    background: #17658a;
+}
+
+input[type=range] {
+    width: 100%;
+    accent-color: #64d9ff;
+}
+
+.config {
+    margin-top: 17px;
+}
+
+.config label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+#mensagem {
+    color: #64d9ff;
+    font-size: 12px;
+    margin-top: 15px;
+    min-height: 16px;
+}
+
+footer {
+    text-align: center;
+    color: #aaa;
+    font-size: 11px;
+}
+
+.oculto {
+    display: none !important;
+}
+
+#hud {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 3;
+    color: #64d9ff;
+    font-size: 11px;
+    pointer-events: none;
+}
+</style>
 </head>
 
 <body>
-    <div id="tela">
-        <div class="olho"><video id="cam" autoplay playsinline muted></video></div>
-        <div class="olho"><video id="cam2" autoplay playsinline muted></video></div>
+
+<div id="tela">
+    <div class="olho" id="olho1">
+        <video id="cam1" autoplay playsinline muted></video>
     </div>
 
-    <script>
-        const video = document.getElementById("cam");
-        const video2 = document.getElementById("cam2");
+    <div class="olho" id="olho2">
+        <video id="cam2" autoplay playsinline muted></video>
+    </div>
+</div>
 
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then((stream) => {
-                video.srcObject = stream;
-                video2.srcObject = stream;
-            })
-            .catch((error) => {
-                console.error("Não foi possível acessar a câmera:", error);
-            });
-    </script>
+<div id="hud" class="oculto">
+    MOBILE QUEST | VR MODE
+</div>
+
+<div id="interface">
+
+    <header>
+        <div class="logo">MOBILE QUEST</div>
+        <div class="status" id="status">SISTEMA INICIALIZADO</div>
+    </header>
+
+    <div class="painel" id="painel">
+
+        <h2>Central VR</h2>
+        <p style="font-size:12px;color:#aaa">
+            Configure sua experiência imersiva.
+        </p>
+
+        <button id="iniciar">INICIAR EXPERIÊNCIA</button>
+        <button id="fullscreen">ATIVAR TELA CHEIA</button>
+
+        <div class="config">
+            <label>
+                Distância das imagens
+                <span id="valorIPD">0 px</span>
+            </label>
+            <input type="range" id="ipd"
+                min="-40" max="40" value="0">
+        </div>
+
+        <div class="config">
+            <label>
+                Zoom
+                <span id="valorZoom">1.0x</span>
+            </label>
+            <input type="range" id="zoom"
+                min="1" max="1.8" step="0.05" value="1">
+        </div>
+
+        <button id="camera">ALTERNAR CÂMERA</button>
+
+        <div id="mensagem">Aguardando inicialização...</div>
+
+    </div>
+
+    <footer>
+        MOBILE QUEST 0.1 — EXPERIMENTAL
+    </footer>
+
+</div>
+
+<script>
+const cam1 = document.getElementById("cam1");
+const cam2 = document.getElementById("cam2");
+
+const interfaceVR = document.getElementById("interface");
+const painel = document.getElementById("painel");
+const status = document.getElementById("status");
+const mensagem = document.getElementById("mensagem");
+
+let stream = null;
+let cameraAtual = "environment";
+let vrAtivo = false;
+let gamepadAnterior = null;
+
+const ipd = document.getElementById("ipd");
+const zoom = document.getElementById("zoom");
+
+// AJUSTE DAS IMAGENS
+
+function atualizarIPD() {
+    document.documentElement.style.setProperty(
+        "--deslocamento", ipd.value + "px"
+    );
+
+    document.getElementById("valorIPD").textContent =
+        ipd.value + " px";
+}
+
+function atualizarZoom() {
+    document.documentElement.style.setProperty(
+        "--zoom", zoom.value
+    );
+
+    document.getElementById("valorZoom").textContent =
+        Number(zoom.value).toFixed(2) + "x";
+}
+
+ipd.addEventListener("input", atualizarIPD);
+zoom.addEventListener("input", atualizarZoom);
+
+// CÂMERA
+
+async function iniciarCamera() {
+    try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error("Câmera indisponível neste contexto.");
+        }
+
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+                facingMode: cameraAtual,
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
+        });
+
+        cam1.srcObject = stream;
+        cam2.srcObject = stream;
+
+        await Promise.all([
+            cam1.play(),
+            cam2.play()
+        ]);
+
+        mensagem.textContent = "Câmera conectada!";
+        status.textContent = "CÂMERA ONLINE";
+
+    } catch (erro) {
+        console.error(erro);
+        mensagem.textContent = "Erro: " + erro.message;
+    }
+}
+
+// INICIAR VR
+
+async function iniciarVR() {
+    await iniciarCamera();
+
+    if (!stream) return;
+
+    vrAtivo = true;
+
+    interfaceVR.classList.add("oculto");
+    document.getElementById("hud").classList.remove("oculto");
+
+    if (screen.orientation?.lock) {
+        screen.orientation.lock("landscape").catch(() => {});
+    }
+
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.()
+            .catch(() => {});
+    }
+}
+
+// TELA CHEIA
+
+document.getElementById("fullscreen").onclick = async () => {
+    try {
+        if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+        } else {
+            await document.exitFullscreen();
+        }
+    } catch (e) {
+        mensagem.textContent = "Tela cheia indisponível.";
+    }
+};
+
+// CÂMERA FRONTAL / TRASEIRA
+
+document.getElementById("camera").onclick = async () => {
+    cameraAtual = cameraAtual === "environment"
+        ? "user"
+        : "environment";
+
+    await iniciarCamera();
+};
+
+// INICIAR EXPERIÊNCIA
+
+document.getElementById("iniciar").onclick = iniciarVR;
+
+// CONTROLE BLUETOOTH
+
+window.addEventListener("gamepadconnected", (e) => {
+    gamepadAnterior = e.gamepad.index;
+    status.textContent = "CONTROLE CONECTADO";
+    mensagem.textContent = "Controle: " + e.gamepad.id;
+});
+
+window.addEventListener("gamepaddisconnected", () => {
+    gamepadAnterior = null;
+    status.textContent = "CONTROLE DESCONECTADO";
+});
+
+function verificarControle() {
+    const controles = navigator.getGamepads?.() || [];
+
+    for (const controle of controles) {
+        if (!controle) continue;
+
+        // A: mostrar / esconder interface
+        if (controle.buttons[0]?.pressed) {
+            if (!controle._a) {
+                interfaceVR.classList.toggle("oculto");
+                controle._a = true;
+            }
+        } else {
+            controle._a = false;
+        }
+
+        // B: voltar ao menu
+        if (controle.buttons[1]?.pressed) {
+            if (!controle._b) {
+                interfaceVR.classList.remove("oculto");
+                document.getElementById("hud")
+                    .classList.add("oculto");
+                vrAtivo = false;
+                controle._b = true;
+            }
+        } else {
+            controle._b = false;
+        }
+
+        // Direcional: ajuste de IPD
+        if (controle.buttons[14]?.pressed) {
+            ipd.value = Math.max(-40, Number(ipd.value) - 1);
+            atualizarIPD();
+        }
+
+        if (controle.buttons[15]?.pressed) {
+            ipd.value = Math.min(40, Number(ipd.value) + 1);
+            atualizarIPD();
+        }
+    }
+
+    requestAnimationFrame(verificarControle);
+}
+
+verificarControle();
+
+// TECLADO PARA TESTES
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        interfaceVR.classList.remove("oculto");
+        document.getElementById("hud").classList.add("oculto");
+        vrAtivo = false;
+    }
+});
+</script>
+
 </body>
-
 </html>
