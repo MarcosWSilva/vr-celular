@@ -1,1037 +1,261 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#050810">
-<title>Mobile Quest 0.4</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050a12">
+<title>Mobile Quest 0.5 — Mixed Reality</title>
 <style>
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
-body {
-    margin: 0;
-    overflow: hidden;
-    background: #03060c;
-    color: white;
-    font-family: Arial, sans-serif;
-    touch-action: none;
-}
-
-#vr {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-#menu {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(3,7,15,.92);
-    backdrop-filter: blur(12px);
-}
-
-.card {
-    width: min(100%, 390px);
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 24px;
-    border: 1px solid #17445b;
-    border-radius: 16px;
-    background: #0b1420;
-    box-shadow: 0 0 35px #007da522;
-}
-
-h1 {
-    color: #5cddff;
-    letter-spacing: 3px;
-    font-size: 23px;
-}
-
-h2 {
-    font-size: 16px;
-    margin-top: 22px;
-    color: #70dfff;
-}
-
-p {
-    color: #a5b5c5;
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-button {
-    width: 100%;
-    margin-top: 10px;
-    padding: 14px;
-    border: 1px solid #24617a;
-    border-radius: 8px;
-    background: #102b40;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-button:active {
-    background: #176080;
-}
-
-.config {
-    margin-top: 17px;
-}
-
-.config label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    margin-bottom: 8px;
-    color: #b9d4e4;
-}
-
-input[type=range] {
-    width: 100%;
-    accent-color: #5cddff;
-}
-
-#status {
-    margin-top: 16px;
-    color: #5cddff;
-    font-size: 12px;
-    min-height: 18px;
-}
-
-#hud {
-    position: fixed;
-    z-index: 4;
-    top: 12px;
-    left: 12px;
-    color: #69e5ff;
-    font-size: 10px;
-    pointer-events: none;
-}
-
-.reticulo {
-    --progresso: 0deg;
-    position: fixed;
-    z-index: 5;
-    top: 50%;
-    width: 34px;
-    height: 34px;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    pointer-events: none;
-    background: conic-gradient(#5cddff var(--progresso), rgba(255,255,255,.12) 0);
-    filter: drop-shadow(0 0 5px #00dfff);
-}
-#reticulo-esquerdo { left: 25%; }
-#reticulo-direito { left: 75%; }
-.reticulo::before {
-    content: "";
-    position: absolute;
-    inset: 3px;
-    border-radius: 50%;
-    background: rgba(2, 9, 17, .88);
-}
-.reticulo .ponto {
-    position: absolute;
-    z-index: 2;
-    left: 50%;
-    top: 50%;
-    width: 5px;
-    height: 5px;
-    border: 1px solid white;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 7px #00dfff;
-}
-.reticulo.travado {
-    filter: drop-shadow(0 0 8px #5cddff);
-}
-#voltar {
-    position: fixed;
-    z-index: 12;
-    top: max(12px, env(safe-area-inset-top));
-    right: max(12px, env(safe-area-inset-right));
-    width: auto;
-    margin: 0;
-    padding: 10px 14px;
-    border-radius: 20px;
-    background: rgba(7, 24, 38, .88);
-    border: 1px solid #5cddff;
-    color: #fff;
-    font-size: 11px;
-    letter-spacing: 1px;
-}
-
-.oculto {
-    display: none !important;
-}
+:root{--cyan:#65e5ff;--cyan2:#16bce8;--panel:rgba(5,16,29,.82);--line:rgba(91,218,255,.72);--shift:0px;--zoom:1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#effaff;font-family:Arial,Helvetica,sans-serif;touch-action:none}
+#stage{position:fixed;inset:0;display:flex;background:#000;overflow:hidden}
+.eye{position:relative;width:50%;height:100%;overflow:hidden;background:#000}
+.eye video{position:absolute;width:100%;height:100%;inset:0;object-fit:cover;transform:scale(var(--zoom));transform-origin:center}
+.eye:first-child video{transform:translateX(calc(var(--shift) * -1)) scale(var(--zoom))}
+.eye:last-child video{transform:translateX(var(--shift)) scale(var(--zoom))}
+.eye-ui{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;border:1px solid rgba(255,255,255,.95);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 7px #00d9ff}
+.pointer{position:absolute;width:22px;height:22px;left:50%;top:50%;border:2px solid var(--cyan);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 12px #00cfff;background:#00cfff22;display:none}
+.pointer:after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;left:7px;top:7px}
+.pointer.pinch{background:#00e5ff99;transform:translate(-50%,-50%) scale(.78)}
+#desktopWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.desktop{pointer-events:auto;width:min(82%,540px);height:min(58%,430px);min-height:220px;border:1px solid var(--line);border-radius:16px;background:var(--panel);backdrop-filter:blur(12px);box-shadow:0 0 28px #00a9d533, inset 0 0 25px #00a9d311;display:flex;flex-direction:column;overflow:hidden;transform:translateY(-1%)}
+.desktop.hidden{display:none}
+.titlebar{height:42px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #4edfff66;background:rgba(5,25,42,.88);font-size:12px;letter-spacing:1.5px;color:var(--cyan);touch-action:none;cursor:grab}
+.titlebar:active{cursor:grabbing}
+.titlebar small{font-size:9px;color:#a6c7d6;letter-spacing:.5px}
+.desktopBody{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0}
+.welcome{font-size:clamp(12px,2vw,17px);color:#e8faff;margin:0 0 2px}
+.sub{font-size:10px;color:#9db8c9;margin:0}
+.appGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;align-content:center}
+.app{border:1px solid #4acbea77;border-radius:11px;background:linear-gradient(145deg,#12334aee,#071523ee);color:#eafaff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:72px;font-size:10px;letter-spacing:.6px;cursor:pointer;user-select:none}
+.app:active,.app.focus{border-color:#b5f5ff;background:#15516a;box-shadow:0 0 15px #00cfff66}
+.app .ico{font-size:23px;line-height:1}
+.appWindow{display:none;flex:1;min-height:0;border:1px solid #45cde977;border-radius:10px;background:#06111feF;padding:14px;overflow:auto;font-size:12px;color:#d8f4ff}
+.appWindow.active{display:block}
+.appWindow h3{color:var(--cyan);margin:0 0 12px;font-size:14px}
+.fakeRow{padding:9px;border-bottom:1px solid #5bcbe833;color:#c4e7f3}
+.uiButton{border:1px solid #4acbea;background:#10334a;color:white;border-radius:7px;padding:9px 12px;font-size:11px;margin:5px 5px 0 0}
+.bottomBar{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #4edfff44;padding:8px 12px;font-size:9px;color:#9bbaca}
+.backBtn{pointer-events:auto;border:1px solid #5bdfff;background:#09273aee;color:#eaffff;border-radius:8px;padding:8px 12px;font-weight:bold;font-size:10px;letter-spacing:.5px}
+#hud{position:fixed;z-index:5;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;font-size:9px;color:#9ceeff;text-shadow:0 1px 4px #000}
+#hud .pill{background:#061522aa;border:1px solid #4edfff55;border-radius:20px;padding:6px 9px}
+#menu{position:fixed;z-index:20;inset:0;background:rgba(2,7,14,.94);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
+.card{width:min(100%,440px);max-height:94vh;overflow:auto;padding:22px;border:1px solid #23617a;border-radius:17px;background:#0a1725;box-shadow:0 0 35px #007da522}
+h1{font-size:23px;letter-spacing:3px;color:var(--cyan);margin:0 0 8px}
+h2{font-size:14px;color:#70dfff;margin:19px 0 8px}
+p{font-size:12px;line-height:1.55;color:#abc0ce}
+button{cursor:pointer}
+.menuBtn{width:100%;margin-top:9px;padding:13px;border:1px solid #24617a;border-radius:8px;background:#102b40;color:white;font-weight:bold;font-size:12px}
+.menuBtn.primary{background:#07516b;border-color:#38d9ff}
+.config{margin-top:13px}.config label{display:flex;justify-content:space-between;font-size:11px;color:#b9d4e4;margin-bottom:6px}input[type=range]{width:100%;accent-color:#5cddff}
+#status{margin-top:13px;min-height:18px;color:#62e4ff;font-size:11px}
+#progress{position:fixed;z-index:8;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);pointer-events:none;display:none}
+#progress svg{width:100%;height:100%;transform:rotate(-90deg)}#progress circle{fill:none;stroke-width:3}#progress .track{stroke:#ffffff55}#progress .value{stroke:#5ceaff;stroke-linecap:round;stroke-dasharray:119.4;stroke-dashoffset:119.4;filter:drop-shadow(0 0 4px #00dfff)}
+#handStatus{position:fixed;z-index:6;bottom:10px;left:50%;transform:translateX(-50%);padding:6px 10px;border:1px solid #4edfff55;border-radius:20px;background:#061522bb;color:#bcefff;font-size:9px;pointer-events:none;white-space:nowrap}
+.hidden{display:none!important}
+@media(max-width:600px){.desktop{width:88%;height:52%;min-height:190px}.desktopBody{padding:9px;gap:8px}.appGrid{gap:6px}.app{min-height:62px;font-size:8px}.titlebar{height:34px}.bottomBar{padding:6px 8px}}
 </style>
-
-<script type="importmap">
-{
-    "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js"
-    }
-}
-</script>
 </head>
-
 <body>
-
-<canvas id="vr"></canvas>
-
-<div id="reticulo-esquerdo" class="reticulo oculto"><div class="progresso"></div><div class="ponto"></div></div>
-<div id="reticulo-direito" class="reticulo oculto"><div class="progresso"></div><div class="ponto"></div></div>
-<button id="voltar" class="oculto" type="button">← VOLTAR</button>
-
-<div id="hud" class="oculto">
-    MOBILE QUEST 0.4 | OLHE POR 5 SEGUNDOS PARA SELECIONAR
+<div id="stage">
+  <section class="eye" id="leftEye"><video id="videoLeft" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerLeft"></div><div id="desktopWrap"><div class="desktop" id="desktopLeft">
+    <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
+    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir.</p>
+      <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
+      <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
+      <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
+      <div class="appWindow" data-window="media"><h3>MÍDIA</h3><p>Central multimídia experimental.</p><div class="fakeRow">Nenhuma mídia carregada.</div></div>
+    </div><div class="bottomBar"><span id="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
+  </div></div></div>
+  <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div id="desktopWrap"><div class="desktop" id="desktopRight">
+    <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
+    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir.</p>
+      <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
+      <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
+      <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
+      <div class="appWindow" data-window="media"><h3>MÍDIA</h3><p>Central multimídia experimental.</p><div class="fakeRow">Nenhuma mídia carregada.</div></div>
+    </div><div class="bottomBar"><span id="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
+  </div></div></div>
 </div>
-
-<div id="menu">
-
-    <div class="card">
-
-        <h1>MOBILE QUEST</h1>
-
-        <p>
-            Sua plataforma de realidade virtual.
-            Ambiente experimental 3D.
-        </p>
-
-        <button id="sensor">
-            ATIVAR HEAD TRACKING
-        </button>
-
-        <button id="entrar">
-            ENTRAR NA SALA VIRTUAL
-        </button>
-
-        <h2>CALIBRAÇÃO VR</h2>
-
-        <div class="config">
-            <label>
-                Distância dos olhos (IPD)
-                <span id="ipdValor">64 mm</span>
-            </label>
-            <input id="ipd" type="range"
-                min="45" max="80" value="64">
-        </div>
-
-        <div class="config">
-            <label>
-                Zoom
-                <span id="zoomValor">1.00x</span>
-            </label>
-            <input id="zoom" type="range"
-                min="0.5" max="2" step="0.05" value="1">
-        </div>
-
-        <button id="recentralizar">
-            RECENTRALIZAR VISÃO
-        </button>
-
-        <div id="status">
-            Sistema aguardando inicialização.
-        </div>
-
-        <p>
-            Olhe para uma opção por 5 segundos para selecionar.<br>A: selecionar | B: menu<br>
-            Analógico esquerdo: movimentar<br>
-            Analógico direito: girar
-        </p>
-
-    </div>
-
-</div>
-
+<div id="hud"><span class="pill">MOBILE QUEST 0.5 · MIXED REALITY</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
+<div id="progress"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="19"/><circle class="value" id="progressRing" cx="22" cy="22" r="19"/></svg></div>
+<div id="handStatus">Aguardando câmera e rastreamento das mãos…</div>
+<div id="menu"><div class="card">
+  <h1>MOBILE QUEST</h1><p>Realidade mista experimental para Galaxy S24 + VR Box. Veja o ambiente pela câmera traseira e interaja com o desktop virtual usando gestos.</p>
+  <button class="menuBtn primary" id="start">INICIAR REALIDADE MISTA</button>
+  <button class="menuBtn" id="startHands">ATIVAR RASTREAMENTO DAS MÃOS</button>
+  <h2>CALIBRAÇÃO DA VISÃO</h2>
+  <div class="config"><label>Separação das imagens <span id="ipdValue">0 px</span></label><input id="ipd" type="range" min="-24" max="24" value="0"></div>
+  <div class="config"><label>Zoom da câmera <span id="zoomValue">1.00x</span></label><input id="zoom" type="range" min="0.7" max="1.6" step="0.05" value="1"></div>
+  <div id="status">Sistema aguardando inicialização.</div>
+  <p>Gestos: indicador aponta · pinça polegar + indicador clica/arrasta · olhar parado por 5 segundos seleciona. Controle: A seleciona · B volta/menu.</p>
+  <p style="font-size:10px;color:#829aaa">A câmera e o reconhecimento de mãos precisam de HTTPS e conexão com a internet para carregar o modelo do MediaPipe. O rastreamento usa a câmera traseira; mantenha a mão visível no campo de visão.</p>
+</div></div>
 <script type="module">
+import { FilesetResolver, HandLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm';
 
-import * as THREE from "three";
+const $=id=>document.getElementById(id);
+const videoL=$('videoLeft'), videoR=$('videoRight'), menu=$('menu');
+const pointers=[$('pointerLeft'),$('pointerRight')];
+const desktops=[$('desktopLeft'),$('desktopRight')];
+let stream=null, handLandmarker=null, handReady=false, running=false;
+let lastVideoTime=-1, lastDetect=0, handPoint=null, pinching=false, pinchWas=false;
+let pinchStart=null, dragTarget=null, dragOffset={x:0,y:0};
+let dwellTarget=null, dwellStart=0, lastGamepadA=false, lastGamepadB=false;
+let zoom=1, shift=0, cameraMode='environment';
+const DWELL_MS=5000;
 
-// ==========================================
-// 1. CONFIGURAÇÃO PRINCIPAL
-// ==========================================
+function status(msg){$('status').textContent=msg;$('handStatus').textContent=msg;}
+function showMenu(){menu.classList.remove('hidden');}
+function hideMenu(){menu.classList.add('hidden');}
+function setZoom(v){zoom=Number(v);document.documentElement.style.setProperty('--zoom',zoom);$('zoomValue').textContent=zoom.toFixed(2)+'x';}
+function setShift(v){shift=Number(v);document.documentElement.style.setProperty('--shift',shift+'px');$('ipdValue').textContent=shift+' px';}
+$('zoom').addEventListener('input',e=>setZoom(e.target.value));
+$('ipd').addEventListener('input',e=>setShift(e.target.value));
 
-const canvas = document.getElementById("vr");
-
-const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: false,
-    powerPreference: "high-performance"
-});
-
-renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio || 1, 1.1)
-);
-
-renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-);
-
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-const scene = new THREE.Scene();
-
-scene.background = new THREE.Color(0x030710);
-
-scene.fog = new THREE.Fog(
-    0x030710, 13, 30
-);
-
-const cameraCentral = new THREE.PerspectiveCamera(
-    75, 1, 0.1, 100
-);
-
-cameraCentral.position.set(0, 1.65, 0);
-
-const cameraLeft = new THREE.PerspectiveCamera();
-const cameraRight = new THREE.PerspectiveCamera();
-
-let ipd = 0.064;
-let zoom = 1;
-
-// ==========================================
-// 2. MATERIAIS
-// ==========================================
-
-const parede = new THREE.MeshStandardMaterial({
-    color: 0x101b2a,
-    metalness: 0.8,
-    roughness: 0.4
-});
-
-const pisoMaterial = new THREE.MeshStandardMaterial({
-    color: 0x090f19,
-    metalness: 0.8,
-    roughness: 0.3
-});
-
-const neon = new THREE.MeshStandardMaterial({
-    color: 0x00bfff,
-    emissive: 0x0088ff,
-    emissiveIntensity: 2
-});
-
-// ==========================================
-// 3. ILUMINAÇÃO
-// ==========================================
-
-scene.add(
-    new THREE.AmbientLight(0x7899bb, 1.2)
-);
-
-const luzPrincipal = new THREE.PointLight(
-    0x18bfff, 16, 18
-);
-
-luzPrincipal.position.set(0, 2.7, -3);
-
-scene.add(luzPrincipal);
-
-const luzSecundaria = new THREE.PointLight(
-    0x0066ff, 10, 15
-);
-
-luzSecundaria.position.set(-3, 2, 1);
-
-scene.add(luzSecundaria);
-
-// ==========================================
-// 4. CONSTRUÇÃO DA SALA
-// ==========================================
-
-function bloco(w, h, d, material, x, y, z) {
-
-    const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(w, h, d),
-        material
-    );
-
-    mesh.position.set(x, y, z);
-
-    scene.add(mesh);
-
-    return mesh;
+async function startCamera(){
+  if(stream) return;
+  if(!navigator.mediaDevices?.getUserMedia) throw new Error('Câmera indisponível. Abra o site em HTTPS no Firefox.');
+  const constraints={audio:false,video:{facingMode:{ideal:cameraMode},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}}};
+  stream=await navigator.mediaDevices.getUserMedia(constraints);
+  videoL.srcObject=stream; videoR.srcObject=stream;
+  await Promise.all([videoL.play(),videoR.play()]);
+  status('Câmera ativa. Preparando rastreamento das mãos…');
 }
 
-// Piso e teto
-
-bloco(10, 0.2, 12, pisoMaterial, 0, -0.1, -2);
-bloco(10, 0.2, 12, parede, 0, 3.5, -2);
-
-// Paredes laterais
-
-bloco(0.2, 3.5, 12, parede, -5, 1.65, -2);
-bloco(0.2, 3.5, 12, parede, 5, 1.65, -2);
-
-// Fundo
-
-bloco(10, 3.5, 0.2, parede, 0, 1.65, -8);
-
-// Molduras luminosas
-
-bloco(0.05, 3.1, 0.05, neon, -4.7, 1.7, -7.8);
-bloco(0.05, 3.1, 0.05, neon, 4.7, 1.7, -7.8);
-
-bloco(9.4, 0.05, 0.05, neon, 0, 3.15, -7.8);
-
-// Linhas do piso
-
-for (let i = -4; i <= 4; i += 2) {
-    bloco(0.025, 0.025, 10, neon, i, 0.015, -2);
-}
-
-// ==========================================
-// 5. PAINEL CENTRAL
-// ==========================================
-
-function criarPainel() {
-
-    const c = document.createElement("canvas");
-
-    c.width = 1024;
-    c.height = 512;
-
-    const ctx = c.getContext("2d");
-
-    ctx.fillStyle = "#071522";
-    ctx.fillRect(0, 0, 1024, 512);
-
-    ctx.strokeStyle = "#00cfff";
-    ctx.lineWidth = 8;
-    ctx.strokeRect(10, 10, 1004, 492);
-
-    ctx.fillStyle = "#6de8ff";
-    ctx.font = "bold 55px Arial";
-    ctx.fillText("MOBILE QUEST", 65, 115);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "28px Arial";
-    ctx.fillText("CENTRAL DE COMANDO", 65, 180);
-
-    ctx.fillStyle = "#83a9c0";
-    ctx.font = "22px Arial";
-    ctx.fillText("AMBIENTE VIRTUAL ONLINE", 65, 260);
-
-    ctx.fillStyle = "#00cfff";
-    ctx.fillRect(65, 300, 890, 3);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "22px Arial";
-    ctx.fillText("SELECIONE UMA EXPERIENCIA", 65, 365);
-
-    const textura = new THREE.CanvasTexture(c);
-
-    const material = new THREE.MeshBasicMaterial({
-        map: textura,
-        side: THREE.DoubleSide
-    });
-
-    const tela = new THREE.Mesh(
-        new THREE.PlaneGeometry(4.5, 2.25),
-        material
-    );
-
-    tela.position.set(0, 2.15, -7.65);
-
-    scene.add(tela);
-}
-
-criarPainel();
-
-// ==========================================
-// 6. BOTÕES INTERATIVOS 3D
-// ==========================================
-
-const interativos = [];
-
-function criarBotao(texto, x, acao) {
-
-    const c = document.createElement("canvas");
-
-    c.width = 512;
-    c.height = 160;
-
-    const ctx = c.getContext("2d");
-
-    ctx.fillStyle = "#102c40";
-    ctx.fillRect(0, 0, 512, 160);
-
-    ctx.strokeStyle = "#00cfff";
-    ctx.lineWidth = 6;
-    ctx.strokeRect(4, 4, 504, 152);
-
-    ctx.fillStyle = "white";
-    ctx.font = "bold 36px Arial";
-    ctx.textAlign = "center";
-
-    ctx.fillText(texto, 256, 95);
-
-    const textura = new THREE.CanvasTexture(c);
-
-    const material = new THREE.MeshBasicMaterial({
-        map: textura,
-        side: THREE.DoubleSide
-    });
-
-    const botao = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.5, 0.48),
-        material
-    );
-
-    botao.position.set(x, 1.25, -6.5);
-
-    botao.userData.acao = acao;
-
-    scene.add(botao);
-
-    interativos.push(botao);
-
-    return botao;
-}
-
-criarBotao("EXPLORAR", -1.65, () => {
-    mostrarMensagem("Exploração selecionada");
-});
-
-criarBotao("CINEMA", 0, () => {
-    mostrarMensagem("Modo cinema selecionado");
-});
-
-criarBotao("CONFIG", 1.65, () => {
-    abrirMenu();
-});
-
-// ==========================================
-// 7. ELEMENTOS DECORATIVOS
-// ==========================================
-
-for (let i = 0; i < 8; i++) {
-
-    const esfera = new THREE.Mesh(
-        new THREE.SphereGeometry(0.045, 10, 10),
-        neon
-    );
-
-    esfera.position.set(
-        -4.5 + i * 1.3,
-        2.9,
-        -7.7
-    );
-
-    scene.add(esfera);
-}
-
-// ==========================================
-// 8. HEAD TRACKING
-// ==========================================
-
-let sensorAtivo = false;
-let sensorRecebido = false;
-
-const calibracaoSensor = new THREE.Quaternion();
-const orientacaoAlvo = new THREE.Quaternion();
-const orientacaoSuave = new THREE.Quaternion();
-const eulerSensor = new THREE.Euler(0, 0, 0, "YXZ");
-
-const eixoZ = new THREE.Vector3(0, 0, 1);
-const eixoX = new THREE.Vector3(1, 0, 0);
-const eixoY = new THREE.Vector3(0, 1, 0);
-
-const ajusteTela = new THREE.Quaternion();
-const ajusteDispositivo = new THREE.Quaternion();
-const qSensor = new THREE.Quaternion();
-const qTemporario = new THREE.Quaternion();
-
-ajusteDispositivo.setFromAxisAngle(eixoX, -Math.PI / 2);
-
-let manualYaw = 0;
-let manualPitch = 0;
-
-function orientacao(evento) {
-    if (evento.alpha === null || evento.beta === null || evento.gamma === null) return;
-
-    eulerSensor.set(
-        THREE.MathUtils.degToRad(evento.beta),
-        THREE.MathUtils.degToRad(evento.alpha),
-        THREE.MathUtils.degToRad(-evento.gamma),
-        "YXZ"
-    );
-
-    qSensor.setFromEuler(eulerSensor);
-
-    const anguloTela = screen.orientation?.angle ?? window.orientation ?? 0;
-    ajusteTela.setFromAxisAngle(
-        eixoZ,
-        -THREE.MathUtils.degToRad(anguloTela)
-    );
-
-    orientacaoAlvo.copy(qSensor)
-        .multiply(ajusteDispositivo)
-        .multiply(ajusteTela);
-
-    // A primeira leitura define a posição neutra automaticamente.
-    if (!sensorRecebido) {
-        calibracaoSensor.copy(orientacaoAlvo).invert();
-        orientacaoSuave.identity();
-        sensorRecebido = true;
-        mostrarMensagem("Sensor ativo. Visão calibrada.");
+async function startHandTracking(){
+  if(handReady)return;
+  status('Carregando modelo de reconhecimento de mãos…');
+  try{
+    const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+    try{
+      handLandmarker=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numHands:1});
+    }catch(gpuError){
+      handLandmarker=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'},runningMode:'VIDEO',numHands:1});
     }
+    handReady=true; $('trackingLabel').textContent='MÃOS: PRONTO'; status('Rastreamento pronto. Mostre sua mão à câmera.');
+  }catch(err){console.error(err);$('trackingLabel').textContent='MÃOS: ERRO';status('Não foi possível carregar o MediaPipe. Verifique a internet e recarregue.');}
 }
 
-async function ativarSensor() {
-    try {
-        if (typeof DeviceOrientationEvent === "undefined") {
-            throw new Error("Sensor de orientação não disponível neste navegador.");
-        }
-
-        if (typeof DeviceOrientationEvent.requestPermission === "function") {
-            const permissao = await DeviceOrientationEvent.requestPermission();
-            if (permissao !== "granted") throw new Error("Permissão do sensor negada.");
-        }
-
-        window.removeEventListener("deviceorientation", orientacao, true);
-        window.addEventListener("deviceorientation", orientacao, true);
-        sensorAtivo = true;
-        sensorRecebido = false;
-        mostrarMensagem("Mantenha o celular na posição neutra por um instante...");
-    } catch (erro) {
-        mostrarMensagem(erro.message);
+function setApp(app){
+  for(const root of desktops){
+    const home=root.querySelector('[data-home]');
+    const windows=root.querySelectorAll('.appWindow');
+    home.style.display=app?'none':'grid';
+    windows.forEach(w=>w.classList.toggle('active',w.dataset.window===app));
+    root.querySelector('#appHint').textContent=app?('Aplicativo: '+app.toUpperCase()):'3 aplicativos disponíveis';
+  }
+}
+function back(){
+  const anyOpen=desktops[0].querySelector('.appWindow.active');
+  if(anyOpen){setApp(null);return;}
+  showMenu();
+}
+function action(el){
+  if(!el)return;
+  const app=el.dataset.app;
+  if(app){setApp(app);return;}
+  const act=el.dataset.action;
+  if(act==='back')back();
+  if(act==='web')status('Navegador virtual experimental: integração web será adicionada depois.');
+}
+function mapCameraPoint(nx,ny){
+  const sourceAspect=videoL.videoWidth/videoL.videoHeight;
+  const eyeAspect=(innerWidth/2)/innerHeight;
+  let x=nx,y=ny;
+  if(sourceAspect>eyeAspect){const visible=eyeAspect/sourceAspect;const crop=(1-visible)/2;x=(nx-crop)/visible;}
+  else{const visible=sourceAspect/eyeAspect;const crop=(1-visible)/2;y=(ny-crop)/visible;}
+  x=(x-.5)*zoom+.5; y=(y-.5)*zoom+.5;
+  return {x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))};
+}
+function getInteractiveAt(localX,y){
+  const el=document.elementFromPoint(localX*(innerWidth/2),y*innerHeight);
+  return el?.closest('[data-app],[data-action]')||null;
+}
+function updatePointer(localX,y,visible=true){
+  pointers.forEach(p=>{p.style.display=visible?'block':'none';p.style.left=(localX*100)+'%';p.style.top=(y*100)+'%';p.classList.toggle('pinch',pinching);});
+}
+function updateDwell(target,now){
+  const ring=$('progressRing'), progress=$('progress');
+  if(!target){dwellTarget=null;dwellStart=0;progress.style.display='none';ring.style.strokeDashoffset='119.4';return;}
+  if(target!==dwellTarget){dwellTarget=target;dwellStart=now;}
+  const ratio=Math.min(1,(now-dwellStart)/DWELL_MS);
+  progress.style.display='block';ring.style.strokeDashoffset=String(119.4*(1-ratio));
+  if(ratio>=1){action(target);dwellTarget=null;dwellStart=0;progress.style.display='none';ring.style.strokeDashoffset='119.4';}
+}
+function processHand(now){
+  if(!handReady||videoL.readyState<2||now-lastDetect<45)return;
+  lastDetect=now;
+  if(videoL.currentTime===lastVideoTime)return;
+  lastVideoTime=videoL.currentTime;
+  const result=handLandmarker.detectForVideo(videoL,now);
+  const landmarks=result.landmarks?.[0];
+  if(!landmarks){handPoint=null;pinching=false;updatePointer(.5,.5,false);updateDwell(null,now);$('trackingLabel').textContent='MÃOS: NÃO DETECTADAS';return;}
+  // Indicador (ponta 8) e pinça (polegar 4 + indicador 8).
+  const tip=landmarks[8], thumb=landmarks[4];
+  // Converte as coordenadas do vídeo para o recorte visível em cada lente.
+  const mapped=mapCameraPoint(tip.x,tip.y);
+  const x=mapped.x, y=mapped.y;
+  handPoint={x,y};
+  const pinchDistance=Math.hypot(tip.x-thumb.x,tip.y-thumb.y);
+  pinching=pinchDistance<0.055;
+  updatePointer(x,y,true);
+  $('trackingLabel').textContent=pinching?'MÃOS: PINÇA':'MÃOS: DETECTADAS';
+  const target=getInteractiveAt(x,y);
+  if(pinching&&!pinchWas){
+    pinchStart={x,y};
+    if(target){action(target);}
+    else{
+      const under=document.elementFromPoint(x*(innerWidth/2),y*innerHeight);
+      if(under?.closest('.titlebar')){dragTarget=desktops;}
     }
+  }
+  if(pinching&&dragTarget&&pinchStart){
+    const dx=(x-pinchStart.x)*(innerWidth/2),dy=(y-pinchStart.y)*innerHeight;
+    dragTarget.forEach(d=>d.style.translate=`${dx}px ${dy}px`);
+  }
+  if(!pinching&&pinchWas){dragTarget=null;pinchStart=null;}
+  pinchWas=pinching;
+  // Seleção por permanência de 5 s como alternativa à pinça.
+  updateDwell(pinching?null:target,now);
 }
 
-// ==========================================
-// 9. RECENTRALIZAR VISÃO
-// ==========================================
-
-function recentralizar() {
-    if (!sensorRecebido) {
-        mostrarMensagem("Aguardando dados do sensor.");
-        return;
-    }
-
-    calibracaoSensor.copy(orientacaoAlvo).invert();
-    orientacaoSuave.identity();
-    manualYaw = 0;
-    manualPitch = 0;
-    mostrarMensagem("Visão recentralizada.");
+function gamepadLoop(){
+  const pads=navigator.getGamepads?.()||[];const pad=Array.from(pads).find(Boolean);
+  if(!pad)return;
+  const a=!!pad.buttons[0]?.pressed,b=!!pad.buttons[1]?.pressed;
+  const x=!!pad.buttons[2]?.pressed;
+  if(a&&!lastGamepadA){const target=handPoint?getInteractiveAt(handPoint.x,handPoint.y):null;if(target)action(target);}
+  if((b&&!lastGamepadB)||x&&!lastGamepadA)back();
+  lastGamepadA=a;lastGamepadB=b;
 }
 
-document.getElementById("recentralizar").onclick =
-    recentralizar;
-
-// ==========================================
-// 10. CONTROLE DA VISÃO
-// ==========================================
-
-const rotacaoYaw = new THREE.Quaternion();
-const rotacaoPitch = new THREE.Quaternion();
-const orientacaoFinal = new THREE.Quaternion();
-
-function atualizarVisao(delta) {
-    if (sensorAtivo && sensorRecebido) {
-        qTemporario.copy(calibracaoSensor).multiply(orientacaoAlvo);
-        orientacaoSuave.slerp(
-            qTemporario,
-            1 - Math.pow(0.001, delta)
-        );
-    } else {
-        orientacaoSuave.identity();
-    }
-
-    rotacaoYaw.setFromAxisAngle(eixoY, manualYaw);
-    rotacaoPitch.setFromAxisAngle(eixoX, manualPitch);
-
-    orientacaoFinal.copy(rotacaoYaw)
-        .multiply(orientacaoSuave)
-        .multiply(rotacaoPitch);
-
-    cameraCentral.quaternion.copy(orientacaoFinal);
+function loop(now){
+  if(!running)return;
+  processHand(now);gamepadLoop();
+  requestAnimationFrame(loop);
 }
-
-// ==========================================
-// 11. RAYCASTER / SELEÇÃO PELO OLHAR
-// ==========================================
-
-const raycaster = new THREE.Raycaster();
-const centro = new THREE.Vector2(0, 0);
-raycaster.far = 8; // Alcance máximo de seleção: 8 metros virtuais.
-
-let alvoAtual = null;
-let alvoAnterior = null;
-let tempoNoAlvo = 0;
-const TEMPO_SELECAO = 5;
-const reticulos = [
-    document.getElementById("reticulo-esquerdo"),
-    document.getElementById("reticulo-direito")
-];
-
-function atualizarProgressoOlhar() {
-    const progresso = Math.min(tempoNoAlvo / TEMPO_SELECAO, 1) * 360;
-    reticulos.forEach(reticulo => {
-        reticulo.style.setProperty("--progresso", progresso + "deg");
-        reticulo.classList.toggle("travado", !!alvoAtual);
-    });
+async function enter(){
+  try{
+    await startCamera();hideMenu();running=true;
+    if(document.documentElement.requestFullscreen&&!document.fullscreenElement){try{await document.documentElement.requestFullscreen();}catch{}}
+    try{await screen.orientation?.lock?.('landscape');}catch{}
+    if(!handReady)startHandTracking();
+    requestAnimationFrame(loop);
+    status('Realidade mista ativa. Mostre sua mão à câmera traseira.');
+  }catch(err){console.error(err);status(err.message||'Falha ao iniciar câmera.');showMenu();}
 }
-
-function verificarOlhar(delta) {
-    if (!menu.classList.contains("oculto")) {
-        alvoAtual = null;
-        alvoAnterior = null;
-        tempoNoAlvo = 0;
-        atualizarProgressoOlhar();
-        return;
-    }
-
-    raycaster.setFromCamera(centro, cameraCentral);
-    const encontrados = raycaster.intersectObjects(interativos, false);
-    const novoAlvo = encontrados.length ? encontrados[0].object : null;
-
-    if (novoAlvo !== alvoAnterior) {
-        alvoAnterior = novoAlvo;
-        alvoAtual = novoAlvo;
-        tempoNoAlvo = 0;
-    } else {
-        alvoAtual = novoAlvo;
-        if (alvoAtual?.userData.acao) {
-            tempoNoAlvo += delta;
-            if (tempoNoAlvo >= TEMPO_SELECAO) {
-                const selecionado = alvoAtual;
-                tempoNoAlvo = 0;
-                alvoAnterior = null;
-                alvoAtual = null;
-                selecionado.userData.acao();
-            }
-        } else {
-            tempoNoAlvo = 0;
-        }
-    }
-
-    atualizarProgressoOlhar();
-}
-
-function selecionar() {
-    if (menu.classList.contains("oculto") && alvoAtual?.userData.acao) {
-        const selecionado = alvoAtual;
-        tempoNoAlvo = 0;
-        alvoAnterior = null;
-        alvoAtual = null;
-        selecionado.userData.acao();
-    }
-}
-
-// Clique/toque no canvas também seleciona, sem impedir os botões da interface.
-canvas.addEventListener("click", selecionar);
-
-// ==========================================
-// 12. GAMEPAD
-// ==========================================
-
-let botaoAAnterior = false;
-let botaoBAnterior = false;
-
-function eixo(gamepad, indice) {
-    const valor = Number(gamepad.axes[indice] || 0);
-    const deadzone = 0.18;
-    if (Math.abs(valor) < deadzone) return 0;
-    return Math.sign(valor) * (Math.abs(valor) - deadzone) / (1 - deadzone);
-}
-
-const vetorFrente = new THREE.Vector3();
-const vetorDireita = new THREE.Vector3();
-const movimento = new THREE.Vector3();
-
-function verificarControle(delta) {
-    const controles = navigator.getGamepads?.() || [];
-    const gamepad = Array.from(controles).find(g => g && g.connected);
-
-    if (!gamepad) {
-        botaoAAnterior = false;
-        botaoBAnterior = false;
-        return;
-    }
-
-    const botaoA = !!gamepad.buttons[0]?.pressed;
-    const botaoB = !!gamepad.buttons[1]?.pressed;
-
-    if (botaoA && !botaoAAnterior) selecionar();
-    if (botaoB && !botaoBAnterior) alternarMenu();
-
-    botaoAAnterior = botaoA;
-    botaoBAnterior = botaoB;
-
-    // Não movimenta o personagem enquanto o menu estiver aberto.
-    if (!menu.classList.contains("oculto")) return;
-
-    const lx = eixo(gamepad, 0);
-    const ly = eixo(gamepad, 1);
-
-    // Movimento acompanha a direção horizontal para onde a cabeça está olhando.
-    cameraCentral.getWorldDirection(vetorFrente);
-    vetorFrente.y = 0;
-    if (vetorFrente.lengthSq() > 0.0001) vetorFrente.normalize();
-
-    vetorDireita.set(vetorFrente.z, 0, -vetorFrente.x);
-    movimento.set(0, 0, 0);
-    movimento.addScaledVector(vetorDireita, lx);
-    movimento.addScaledVector(vetorFrente, -ly);
-
-    if (movimento.lengthSq() > 1) movimento.normalize();
-    cameraCentral.position.addScaledVector(movimento, 2.8 * delta);
-
-    cameraCentral.position.x = THREE.MathUtils.clamp(cameraCentral.position.x, -4.5, 4.5);
-    cameraCentral.position.z = THREE.MathUtils.clamp(cameraCentral.position.z, -7.5, 3.5);
-
-    // Analógico direito: giro manual. Alguns controles Android usam eixos 2 e 3.
-    const rx = eixo(gamepad, 2);
-    const ry = eixo(gamepad, 3);
-    manualYaw -= rx * delta * 2.2;
-    manualPitch -= ry * delta * 1.7;
-    manualPitch = THREE.MathUtils.clamp(manualPitch, -0.7, 0.7);
-}
-
-window.addEventListener("gamepadconnected", () => mostrarMensagem("Controle conectado!"));
-window.addEventListener("gamepaddisconnected", () => mostrarMensagem("Controle desconectado."));
-
-// ==========================================
-// 13. INTERFACE
-// ==========================================
-
-const menu = document.getElementById("menu");
-
-function abrirMenu() {
-    menu.classList.remove("oculto");
-    document.getElementById("voltar").classList.add("oculto");
-}
-
-function fecharMenu() {
-    menu.classList.add("oculto");
-    if (!document.getElementById("hud").classList.contains("oculto")) {
-        document.getElementById("voltar").classList.remove("oculto");
-    }
-}
-
-function alternarMenu() {
-
-    if (menu.classList.contains("oculto")) {
-        abrirMenu();
-    } else {
-        fecharMenu();
-    }
-
-}
-
-function mostrarMensagem(texto) {
-    document.getElementById("status").textContent = texto;
-}
-
-document.getElementById("voltar").addEventListener("click", () => {
-    abrirMenu();
-});
-
-// ==========================================
-// 14. CALIBRAÇÃO IPD E ZOOM
-// ==========================================
-
-document.getElementById("ipd").addEventListener(
-    "input",
-    (e) => {
-
-        ipd = Number(e.target.value) / 1000;
-
-        document.getElementById("ipdValor")
-            .textContent = e.target.value + " mm";
-
-    }
-);
-
-document.getElementById("zoom").addEventListener(
-    "input",
-    (e) => {
-
-        zoom = Number(e.target.value);
-
-        document.getElementById("zoomValor")
-            .textContent = zoom.toFixed(2) + "x";
-
-    }
-);
-
-// ==========================================
-// 15. ENTRADA NA EXPERIÊNCIA
-// ==========================================
-
-document.getElementById("sensor").onclick =
-    ativarSensor;
-
-document.getElementById("entrar").onclick =
-    async () => {
-
-        fecharMenu();
-
-        document.getElementById("hud")
-            .classList.remove("oculto");
-
-        reticulos.forEach(reticulo => reticulo.classList.remove("oculto"));
-        document.getElementById("voltar").classList.remove("oculto");
-
-        try {
-
-            if (!document.fullscreenElement) {
-                await document.documentElement
-                    .requestFullscreen();
-            }
-
-        } catch (erro) {
-
-            mostrarMensagem("Tela cheia indisponível.");
-
-        }
-
-        if (screen.orientation?.lock) {
-
-            screen.orientation.lock("landscape")
-                .catch(() => {});
-
-        }
-
-        mostrarMensagem("Bem-vindo à sala virtual.");
-
-    };
-
-document.addEventListener("keydown", (e) => {
-
-    if (e.key === "Escape") {
-        abrirMenu();
-    }
-
-    if (e.key === "Enter") {
-        selecionar();
-    }
-
-});
-
-// ==========================================
-// 16. RENDERIZAÇÃO VR
-// ==========================================
-
-const posicaoOlho = new THREE.Vector3();
-
-function animar() {
-
-    requestAnimationFrame(animar);
-
-    const delta = Math.min(
-        clock.getDelta(),
-        0.05
-    );
-
-    if (document.hidden) return;
-
-    const largura = window.innerWidth;
-    const altura = window.innerHeight;
-
-    const metade = Math.floor(largura / 2);
-
-    atualizarVisao(delta);
-
-    verificarControle(delta);
-
-    verificarOlhar(delta);
-
-    // Movimento de iluminação
-
-    luzPrincipal.intensity =
-        16 + Math.sin(performance.now() * 0.001) * 2;
-
-    // Câmeras independentes
-
-    const fovComZoom = THREE.MathUtils.clamp(
-        THREE.MathUtils.radToDeg(
-            2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(75) / 2) / zoom)
-        ),
-        35,
-        110
-    );
-    cameraLeft.fov = fovComZoom;
-    cameraRight.fov = fovComZoom;
-
-    cameraLeft.aspect = metade / altura;
-    cameraRight.aspect = (largura - metade) / altura;
-
-    cameraLeft.position.copy(cameraCentral.position);
-
-    posicaoOlho.set(-ipd / 2, 0, 0)
-        .applyQuaternion(cameraCentral.quaternion);
-
-    cameraLeft.position.add(posicaoOlho);
-
-    cameraRight.position.copy(cameraCentral.position);
-
-    posicaoOlho.set(ipd / 2, 0, 0)
-        .applyQuaternion(cameraCentral.quaternion);
-
-    cameraRight.position.add(posicaoOlho);
-
-    cameraLeft.quaternion.copy(cameraCentral.quaternion);
-    cameraRight.quaternion.copy(cameraCentral.quaternion);
-
-    cameraLeft.updateProjectionMatrix();
-    cameraRight.updateProjectionMatrix();
-
-    // Renderização do olho esquerdo
-
-    renderer.setScissorTest(true);
-
-    renderer.setViewport(0, 0, metade, altura);
-    renderer.setScissor(0, 0, metade, altura);
-
-    renderer.render(scene, cameraLeft);
-
-    // Renderização do olho direito
-
-    renderer.setViewport(
-        metade, 0, largura - metade, altura
-    );
-
-    renderer.setScissor(
-        metade, 0, largura - metade, altura
-    );
-
-    renderer.render(scene, cameraRight);
-
-    renderer.setScissorTest(false);
-
-}
-
-// ==========================================
-// 17. RESPONSIVIDADE
-// ==========================================
-
-window.addEventListener("resize", () => {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.1));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-const clock = new THREE.Clock();
-
-animar();
-
+$('start').addEventListener('click',enter);
+$('startHands').addEventListener('click',async()=>{try{await startCamera();await startHandTracking();}catch(e){status(e.message);}});
+$('menu').addEventListener('click',e=>{if(e.target===menu){} });
+document.addEventListener('click',e=>{const target=e.target.closest('[data-app],[data-action]');if(target)action(target);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Backspace'){e.preventDefault();back();}});
+window.addEventListener('gamepadconnected',()=>status('Controle Bluetooth conectado.'));
+window.addEventListener('gamepaddisconnected',()=>status('Controle desconectado.'));
+document.addEventListener('visibilitychange',()=>{if(document.hidden){running=false;}else if(stream&&!menu.classList.contains('hidden')){}else if(stream){running=true;requestAnimationFrame(loop);}});
+window.addEventListener('beforeunload',()=>stream?.getTracks().forEach(t=>t.stop()));
 </script>
-
 </body>
 </html>
