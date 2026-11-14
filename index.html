@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#050a12">
-<title>Mobile Quest 1.0 — Dwell e Arrastar</title>
+<title>Mobile Quest 1.1 — Janelas e Menus</title>
 <style>
 :root{--cyan:#65e5ff;--cyan2:#16bce8;--panel:rgba(5,16,29,.82);--line:rgba(91,218,255,.72);--shift:0px;--zoom:1}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -21,69 +21,69 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:
 .pointer{position:absolute;width:22px;height:22px;left:50%;top:50%;border:2px solid var(--cyan);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 12px #00cfff;background:#00cfff22;display:none}
 .pointer:after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;left:7px;top:7px}
 .pointer.pinch{background:#00e5ff99;transform:translate(-50%,-50%) scale(.78)}
-.desktopWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.desktop{pointer-events:auto;width:min(82%,540px);height:min(58%,430px);min-height:220px;border:1px solid var(--line);border-radius:16px;background:var(--panel);backdrop-filter:blur(12px);box-shadow:0 0 28px #00a9d533, inset 0 0 25px #00a9d311;display:flex;flex-direction:column;overflow:hidden;transform:translateY(-1%)}
+.desktopWrap{position:absolute;inset:0;display:block;pointer-events:none}.desktopWrap>.desktop,.desktopWrap>.appWindow{pointer-events:auto}
+.desktop{pointer-events:auto;position:absolute;left:5%;bottom:5%;width:90%;height:92px;min-height:0;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(12,16,22,.88);backdrop-filter:blur(16px);box-shadow:0 12px 36px #0008;display:flex;flex-direction:column;overflow:hidden;transform:none}
 .desktop.hidden{display:none}
-.titlebar{height:42px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #4edfff66;background:rgba(5,25,42,.88);font-size:12px;letter-spacing:1.5px;color:var(--cyan);touch-action:none;cursor:grab}
+.titlebar{height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);font-size:10px;letter-spacing:.7px;color:#e9edf2;touch-action:none;cursor:grab}
 .titlebar:active{cursor:grabbing}
 .titlebar small{font-size:9px;color:#a6c7d6;letter-spacing:.5px}
-.desktopBody{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0}
-.welcome{font-size:clamp(12px,2vw,17px);color:#e8faff;margin:0 0 2px}
+.desktopBody{padding:5px 8px;display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow:hidden}
+.welcome,.sub{display:none}
 .sub{font-size:10px;color:#9db8c9;margin:0}
-.appGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1;align-content:center}
-.app{border:1px solid #4acbea77;border-radius:11px;background:linear-gradient(145deg,#12334aee,#071523ee);color:#eafaff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:72px;font-size:10px;letter-spacing:.6px;cursor:pointer;user-select:none}
-.app:active,.app.focus{border-color:#b5f5ff;background:#15516a;box-shadow:0 0 15px #00cfff66}
-.app .ico{font-size:23px;line-height:1}
-.appWindow{display:none;flex:1;min-height:0;border:1px solid #45cde977;border-radius:10px;background:#06111feF;padding:14px;overflow:auto;font-size:12px;color:#d8f4ff}
-.appWindow.active{display:block}
+.appGrid{display:flex;gap:7px;flex:1;align-items:center;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#87919d #252b33;padding:0 2px}
+.app{border:1px solid rgba(255,255,255,.13);border-radius:8px;background:rgba(255,255,255,.055);color:#eef1f5;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;min-height:44px;min-width:92px;padding:0 10px;font-size:9px;letter-spacing:.3px;cursor:pointer;user-select:none;white-space:nowrap}
+.app:active,.app.focus{border-color:#d8e0e8;background:rgba(255,255,255,.16);box-shadow:0 0 0 1px #fff2}
+.app .ico{font-size:16px;line-height:1;color:#cbd5df}
+.appWindow{display:none;position:absolute;z-index:6;pointer-events:auto;flex-direction:column;width:46%;height:54%;min-height:90px;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:rgba(15,19,25,.91);backdrop-filter:blur(18px);box-shadow:0 14px 40px #0009;padding:0;overflow:hidden;font-size:11px;color:#e4e9ef}
+.appWindow.active{display:flex}.appWindow h3{display:none}.windowBar{height:30px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:rgba(255,255,255,.055);border-bottom:1px solid rgba(255,255,255,.1);touch-action:none;cursor:grab;color:#f2f4f7;font-size:10px}.windowTools{display:flex;align-items:center;gap:5px}.windowTool{border:0;background:transparent;color:#cbd3dc;font-size:13px;padding:3px 5px}.windowContent{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;padding:9px;scrollbar-width:thin;scrollbar-color:#929ba6 #252b33}.windowContent::-webkit-scrollbar,.appGrid::-webkit-scrollbar{width:7px;height:6px}.windowContent::-webkit-scrollbar-track,.appGrid::-webkit-scrollbar-track{background:#252b33;border-radius:8px}.windowContent::-webkit-scrollbar-thumb,.appGrid::-webkit-scrollbar-thumb{background:#929ba6;border-radius:8px}.windowScroll{border:0;background:transparent;color:#cbd3dc;padding:2px 4px;font-size:10px}
 .appWindow h3{color:var(--cyan);margin:0 0 12px;font-size:14px}
-.fakeRow{padding:9px;border-bottom:1px solid #5bcbe833;color:#c4e7f3}
-.uiButton{border:1px solid #4acbea;background:#10334a;color:white;border-radius:7px;padding:9px 12px;font-size:11px;margin:5px 5px 0 0}
-.bottomBar{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #4edfff44;padding:8px 12px;font-size:9px;color:#9bbaca}
-.backBtn{pointer-events:auto;border:1px solid #5bdfff;background:#09273aee;color:#eaffff;border-radius:8px;padding:8px 12px;font-weight:bold;font-size:10px;letter-spacing:.5px}
+.fakeRow{padding:9px;border-bottom:1px solid rgba(255,255,255,.09);color:#d0d7df}
+.uiButton{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#f3f5f7;border-radius:6px;padding:8px 10px;font-size:10px;margin:5px 5px 0 0}
+.bottomBar{display:none}
+.backBtn{pointer-events:auto;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#eef1f5;border-radius:6px;padding:6px 9px;font-size:9px}
 #hud{position:fixed;z-index:5;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;font-size:9px;color:#9ceeff;text-shadow:0 1px 4px #000}
 #hud .pill{background:#061522aa;border:1px solid #4edfff55;border-radius:20px;padding:6px 9px}
 #menu{position:fixed;z-index:20;inset:0;background:rgba(2,7,14,.94);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
-.card{width:min(100%,440px);max-height:94vh;overflow:auto;padding:22px;border:1px solid #23617a;border-radius:17px;background:#0a1725;box-shadow:0 0 35px #007da522}
-h1{font-size:23px;letter-spacing:3px;color:var(--cyan);margin:0 0 8px}
-h2{font-size:14px;color:#70dfff;margin:19px 0 8px}
+.card{width:min(100%,390px);max-height:94vh;overflow:auto;padding:22px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(17,21,27,.96);box-shadow:0 20px 60px #0009}
+h1{font-size:20px;letter-spacing:1.5px;color:#f0f3f6;margin:0 0 8px}
+h2{font-size:12px;color:#d3dbe3;margin:19px 0 8px}
 p{font-size:12px;line-height:1.55;color:#abc0ce}
 button{cursor:pointer}
-.menuBtn{width:100%;margin-top:9px;padding:13px;border:1px solid #24617a;border-radius:8px;background:#102b40;color:white;font-weight:bold;font-size:12px}
-.menuBtn.primary{background:#07516b;border-color:#38d9ff}
+.menuBtn{width:100%;margin-top:9px;padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:7px;background:rgba(255,255,255,.06);color:white;font-weight:600;font-size:11px}
+.menuBtn.primary{background:#e8edf2;border-color:#e8edf2;color:#171b20}
 .config{margin-top:13px}.config label{display:flex;justify-content:space-between;font-size:11px;color:#b9d4e4;margin-bottom:6px}input[type=range]{width:100%;accent-color:#5cddff}
 #status{margin-top:13px;min-height:18px;color:#62e4ff;font-size:11px}
 #progress{position:fixed;z-index:8;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);pointer-events:none;display:none}
 #progress svg{width:100%;height:100%;transform:rotate(-90deg)}#progress circle{fill:none;stroke-width:3}#progress .track{stroke:#ffffff55}#progress .value{stroke:#5ceaff;stroke-linecap:round;stroke-dasharray:119.4;stroke-dashoffset:119.4;filter:drop-shadow(0 0 4px #00dfff)}
 #handStatus{position:fixed;z-index:6;bottom:10px;left:50%;transform:translateX(-50%);padding:6px 10px;border:1px solid #4edfff55;border-radius:20px;background:#061522bb;color:#bcefff;font-size:9px;pointer-events:none;white-space:nowrap}
 .hidden{display:none!important}
-@media(max-width:600px){.desktop{width:88%;height:52%;min-height:190px}.desktopBody{padding:9px;gap:8px}.appGrid{gap:6px}.app{min-height:62px;font-size:8px}.titlebar{height:34px}.bottomBar{padding:6px 8px}}
+@media(max-width:600px){.desktop{width:92%;height:82px;left:4%;bottom:4%}.desktopBody{padding:4px 6px}.app{min-width:78px;min-height:40px;font-size:8px}.titlebar{height:25px}.appWindow{width:47%;height:48%;min-height:80px}.windowBar{height:26px}.windowContent{padding:7px}}
 </style>
 </head>
 <body>
 <div id="stage">
   <section class="eye" id="leftEye"><video id="videoLeft" autoplay muted playsinline></video><div class="eye-ui"><canvas class="handOverlay" id="handLeft" aria-hidden="true"></canvas><div class="crosshair"></div><div class="pointer" id="pointerLeft"></div><div class="desktopWrap"><div class="desktop" id="desktopLeft">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
-    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Use a ponta do indicador como mouse. Segure o dedo sobre um item por 2,5 segundos para selecionar. Faça pinça para agarrar e arrastar a janela.</p>
+    <div class="desktopBody"><p class="welcome">Aplicativos</p><p class="sub">Abra mais de uma janela e organize-as no espaço.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
-      <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
+      <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div><div class="fakeRow">▣ Downloads</div><div class="fakeRow">▣ Área de trabalho</div><div class="fakeRow">▣ Vídeos</div><div class="fakeRow">▣ Música</div><div class="fakeRow">▣ Capturas</div><div class="fakeRow">▣ Modelos</div><div class="fakeRow">▣ Outros arquivos</div></div>
       <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
       <div class="appWindow" data-window="media"><h3>MÍDIA</h3><p>Central multimídia experimental.</p><div class="fakeRow">Nenhuma mídia carregada.</div></div>
-    </div><div class="bottomBar"><span class="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
+    </div><div class="bottomBar"><span class="appHint">APLICATIVOS</span><button class="backBtn" data-action="back">VOLTAR</button></div>
   </div></div></div>
   </section>
   <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><div class="eye-ui"><canvas class="handOverlay" id="handRight" aria-hidden="true"></canvas><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div class="desktopWrap"><div class="desktop" id="desktopRight">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
-    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Use a ponta do indicador como mouse. Segure o dedo sobre um item por 2,5 segundos para selecionar. Faça pinça para agarrar e arrastar a janela.</p>
+    <div class="desktopBody"><p class="welcome">Aplicativos</p><p class="sub">Abra mais de uma janela e organize-as no espaço.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
-      <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
+      <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div><div class="fakeRow">▣ Downloads</div><div class="fakeRow">▣ Área de trabalho</div><div class="fakeRow">▣ Vídeos</div><div class="fakeRow">▣ Música</div><div class="fakeRow">▣ Capturas</div><div class="fakeRow">▣ Modelos</div><div class="fakeRow">▣ Outros arquivos</div></div>
       <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
       <div class="appWindow" data-window="media"><h3>MÍDIA</h3><p>Central multimídia experimental.</p><div class="fakeRow">Nenhuma mídia carregada.</div></div>
-    </div><div class="bottomBar"><span class="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
+    </div><div class="bottomBar"><span class="appHint">APLICATIVOS</span><button class="backBtn" data-action="back">VOLTAR</button></div>
   </div></div></div>
   </section>
 </div>
-<div id="hud"><span class="pill">MOBILE QUEST 1.0 · DWELL + ARRASTAR</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
+<div id="hud"><span class="pill">MOBILE QUEST 1.1 · JANELAS + MENUS</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
 <div id="progress"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="19"/><circle class="value" id="progressRing" cx="22" cy="22" r="19"/></svg></div>
 <div id="handStatus">Aguardando câmera e rastreamento das mãos…</div>
 <div id="menu"><div class="card">
@@ -94,8 +94,8 @@ button{cursor:pointer}
   <div class="config"><label>Separação das imagens <span id="ipdValue">0 px</span></label><input id="ipd" type="range" min="-24" max="24" value="0"></div>
   <div class="config"><label>Zoom da câmera <span id="zoomValue">1.00x</span></label><input id="zoom" type="range" min="0.7" max="1.6" step="0.05" value="1"></div>
   <div id="status">Sistema aguardando inicialização.</div>
-  <p>Gestos: indicador move o ponteiro · pare sobre um item por 2,5 segundos para selecionar · pinça polegar + indicador e mova a mão para arrastar a janela. Controle: A seleciona · B volta/menu.</p>
-  <p style="font-size:10px;color:#829aaa">Esta versão prioriza estabilidade: não usa segmentação pesada. A mão aparece como um esqueleto luminoso sobre a interface, não como recorte fotográfico. HTTPS e internet são necessários para carregar o modelo MediaPipe.</p>
+  <p>Indicador: mover e selecionar após 2,5 s. Pinça: agarrar e mover janelas. Abra vários aplicativos ao mesmo tempo; cada janela pode ser movida separadamente.</p>
+  <p style="font-size:10px;color:#829aaa">Interface experimental com janelas independentes e rolagem. A mão aparece como esqueleto luminoso; ainda não há profundidade estereoscópica real. HTTPS e internet são necessários para carregar o MediaPipe.</p>
 </div></div>
 <script type="module">
 import { FilesetResolver, HandLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm';
@@ -107,10 +107,30 @@ const desktops=[$('desktopLeft'),$('desktopRight')];
 let stream=null, handLandmarker=null, handReady=false, running=false;
 const handCanvases=[$('handLeft'),$('handRight')];
 const HAND_CONNECTIONS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+// Transforma cada aplicativo em uma janela independente, mantendo a mesma disposição nos dois olhos.
+function buildWindows(){
+  desktops.forEach(root=>{
+    const wrap=root.parentElement;
+    root.querySelectorAll('.appWindow').forEach(win=>{
+      const name=win.dataset.window;
+      const heading=win.querySelector('h3')?.textContent||name.toUpperCase();
+      const content=document.createElement('div');content.className='windowContent';
+      [...win.childNodes].forEach(node=>{if(!(node.nodeType===1&&node.tagName==='H3'))content.appendChild(node);});
+      const bar=document.createElement('div');bar.className='windowBar';bar.dataset.drag='true';
+      const title=document.createElement('span');title.textContent=heading;
+      const tools=document.createElement('div');tools.className='windowTools';
+      const up=document.createElement('button');up.className='windowScroll';up.dataset.scroll='up';up.textContent='▲';
+      const down=document.createElement('button');down.className='windowScroll';down.dataset.scroll='down';down.textContent='▼';
+      const close=document.createElement('button');close.className='windowTool';close.dataset.action='close';close.dataset.window=name;close.textContent='×';
+      tools.append(up,down,close);bar.append(title,tools);win.append(bar,content);wrap.appendChild(win);
+    });
+  });
+}
+buildWindows();
 let lastVideoTime=-1, lastDetect=0, handPoint=null, pinching=false, pinchWas=false;
 let pinchStart=null, dragTarget=null, dragOffset={x:0,y:0};
 let dwellTarget=null, dwellStart=0, dwellFired=false, lastGamepadA=false, lastGamepadB=false;
-let zoom=1, shift=0, cameraMode='environment';
+let zoom=1, shift=0, cameraMode='environment', windowFocus=20;
 const DWELL_MS=2500;
 
 function status(msg){$('status').textContent=msg;$('handStatus').textContent=msg;}
@@ -145,18 +165,30 @@ async function startHandTracking(){
   }catch(err){console.error(err);$('trackingLabel').textContent='MÃOS: ERRO';status('Não foi possível carregar o MediaPipe. Verifique a internet e recarregue.');}
 }
 
-function setApp(app){
-  for(const root of desktops){
-    const home=root.querySelector('[data-home]');
-    const windows=root.querySelectorAll('.appWindow');
-    home.style.display=app?'none':'grid';
-    windows.forEach(w=>w.classList.toggle('active',w.dataset.window===app));
-    root.querySelector('.appHint').textContent=app?('Aplicativo: '+app.toUpperCase()):'3 aplicativos disponíveis';
-  }
+function arrangeWindows(){
+  const open=[...desktops[0].parentElement.querySelectorAll('.appWindow.active')].map(w=>w.dataset.window);
+  const count=open.length;
+  desktops.forEach(root=>{
+    const wrap=root.parentElement;
+    const wins=[...wrap.querySelectorAll('.appWindow.active')];
+    wins.forEach((w,i)=>{
+      w.style.translate='0px 0px';
+      if(count===1){w.style.left='27%';w.style.top='13%';w.style.width='46%';w.style.height='60%';}
+      else if(count===2){w.style.left=i===0?'3%':'51%';w.style.top='13%';w.style.width='46%';w.style.height='60%';}
+      else {w.style.left=i===0?'3%':i===1?'51%':'27%';w.style.top=i===2?'39%':'13%';w.style.width='46%';w.style.height=i===2?'34%':'34%';}
+    });
+  });
 }
+function setApp(app){
+  if(app){
+    desktops.forEach(root=>{const w=root.parentElement.querySelector(`.appWindow[data-window="${app}"]`);if(w)w.classList.add('active');});
+  }
+  arrangeWindows();
+}
+function closeApp(app){desktops.forEach(root=>root.parentElement.querySelectorAll(`.appWindow[data-window="${app}"]`).forEach(w=>w.classList.remove('active')));arrangeWindows();}
 function back(){
-  const anyOpen=desktops[0].querySelector('.appWindow.active');
-  if(anyOpen){setApp(null);return;}
+  const active=desktops[0].parentElement.querySelectorAll('.appWindow.active');
+  if(active.length){const last=active[active.length-1].dataset.window;closeApp(last);return;}
   showMenu();
 }
 function action(el){
@@ -165,7 +197,9 @@ function action(el){
   if(app){setApp(app);return;}
   const act=el.dataset.action;
   if(act==='back')back();
+  if(act==='close'){closeApp(el.dataset.window);return;}
   if(act==='web')status('Navegador virtual experimental: integração web será adicionada depois.');
+  if(el.dataset.scroll){const box=el.closest('.appWindow')?.querySelector('.windowContent');if(box)box.scrollBy({top:el.dataset.scroll==='down'?box.clientHeight*.72:-box.clientHeight*.72,behavior:'smooth'});}
 }
 function mapCameraPoint(nx,ny){
   const sourceAspect=videoL.videoWidth/videoL.videoHeight;
@@ -179,7 +213,7 @@ function mapCameraPoint(nx,ny){
 function eyeTargetAt(localX,y,eyeIndex){
   const px=(eyeIndex===0?0:innerWidth/2)+localX*(innerWidth/2);
   const el=document.elementFromPoint(px,y*innerHeight);
-  return el?.closest('[data-app],[data-action],[data-drag]')||null;
+  return el?.closest('[data-app],[data-action],[data-drag],[data-scroll]')||null;
 }
 function getInteractiveAt(localX,y){
   return eyeTargetAt(localX,y,0)||eyeTargetAt(localX,y,1);
@@ -244,8 +278,10 @@ function processHand(now){
   if(pinching&&!wasPinching){
     pinchStart={x,y};
     // A pinça agarra a janela em qualquer ponto dela; não dispara cliques.
+    const floating=target?.closest('.appWindow');
     const desktop=target?.closest('.desktop');
-    if(desktop)dragTarget=desktops;
+    if(floating){const key=floating.dataset.window;dragTarget=desktops.map(root=>root.parentElement.querySelector(`.appWindow[data-window="${key}"]`)).filter(Boolean);windowFocus++;dragTarget.forEach(w=>w.style.zIndex=String(windowFocus));}
+    else if(desktop)dragTarget=desktops;
     dwellTarget=null;dwellStart=0;dwellFired=false;
     $('progress').style.display='none';
   }
