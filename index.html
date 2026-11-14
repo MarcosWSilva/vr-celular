@@ -4,13 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#050a12">
-<title>Mobile Quest 0.6 — Divisão 50/50</title>
+<title>Mobile Quest 0.7 — Dois olhos corrigidos</title>
 <style>
 :root{--cyan:#65e5ff;--cyan2:#16bce8;--panel:rgba(5,16,29,.82);--line:rgba(91,218,255,.72);--shift:0px;--zoom:1}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#effaff;font-family:Arial,Helvetica,sans-serif;touch-action:none}
-#stage{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);width:100%;height:100%;background:#000;overflow:hidden}
+#stage{position:fixed;inset:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:minmax(0,1fr);width:100%;height:100%;background:#000;overflow:hidden}
 .eye{position:relative;display:block;width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;background:#000;grid-row:1}
+#leftEye{grid-column:1}
+#rightEye{grid-column:2}
 .eye video{position:absolute;width:100%;height:100%;inset:0;object-fit:cover;transform:scale(var(--zoom));transform-origin:center}
 .eye:first-child video{transform:translateX(calc(var(--shift) * -1)) scale(var(--zoom))}
 .eye:last-child video{transform:translateX(var(--shift)) scale(var(--zoom))}
@@ -67,8 +69,9 @@ button{cursor:pointer}
       <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
       <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
       <div class="appWindow" data-window="media"><h3>MÍDIA</h3><p>Central multimídia experimental.</p><div class="fakeRow">Nenhuma mídia carregada.</div></div>
-    </div><div class="bottomBar"><span id="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
+    </div><div class="bottomBar"><span class="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
   </div></div></div>
+  </section>
   <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div class="desktopWrap"><div class="desktop" id="desktopRight">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
     <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir.</p>
@@ -76,10 +79,11 @@ button{cursor:pointer}
       <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
       <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
       <div class="appWindow" data-window="media"><h3>MÍDIA</h3><p>Central multimídia experimental.</p><div class="fakeRow">Nenhuma mídia carregada.</div></div>
-    </div><div class="bottomBar"><span id="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
+    </div><div class="bottomBar"><span class="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
   </div></div></div>
+  </section>
 </div>
-<div id="hud"><span class="pill">MOBILE QUEST 0.6 · DIVISÃO 50/50</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
+<div id="hud"><span class="pill">MOBILE QUEST 0.7 · DOIS OLHOS</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
 <div id="progress"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="19"/><circle class="value" id="progressRing" cx="22" cy="22" r="19"/></svg></div>
 <div id="handStatus">Aguardando câmera e rastreamento das mãos…</div>
 <div id="menu"><div class="card">
@@ -145,7 +149,7 @@ function setApp(app){
     const windows=root.querySelectorAll('.appWindow');
     home.style.display=app?'none':'grid';
     windows.forEach(w=>w.classList.toggle('active',w.dataset.window===app));
-    root.querySelector('#appHint').textContent=app?('Aplicativo: '+app.toUpperCase()):'3 aplicativos disponíveis';
+    root.querySelector('.appHint').textContent=app?('Aplicativo: '+app.toUpperCase()):'3 aplicativos disponíveis';
   }
 }
 function back(){
