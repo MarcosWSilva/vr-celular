@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#050a12">
-<title>Mobile Quest 0.5 — Mixed Reality</title>
+<title>Mobile Quest 0.6 — Divisão 50/50</title>
 <style>
 :root{--cyan:#65e5ff;--cyan2:#16bce8;--panel:rgba(5,16,29,.82);--line:rgba(91,218,255,.72);--shift:0px;--zoom:1}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#effaff;font-family:Arial,Helvetica,sans-serif;touch-action:none}
-#stage{position:fixed;inset:0;display:flex;background:#000;overflow:hidden}
-.eye{position:relative;width:50%;height:100%;overflow:hidden;background:#000}
+#stage{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);width:100%;height:100%;background:#000;overflow:hidden}
+.eye{position:relative;display:block;width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;background:#000;grid-row:1}
 .eye video{position:absolute;width:100%;height:100%;inset:0;object-fit:cover;transform:scale(var(--zoom));transform-origin:center}
 .eye:first-child video{transform:translateX(calc(var(--shift) * -1)) scale(var(--zoom))}
 .eye:last-child video{transform:translateX(var(--shift)) scale(var(--zoom))}
@@ -19,7 +19,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:
 .pointer{position:absolute;width:22px;height:22px;left:50%;top:50%;border:2px solid var(--cyan);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 12px #00cfff;background:#00cfff22;display:none}
 .pointer:after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;left:7px;top:7px}
 .pointer.pinch{background:#00e5ff99;transform:translate(-50%,-50%) scale(.78)}
-#desktopWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.desktopWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .desktop{pointer-events:auto;width:min(82%,540px);height:min(58%,430px);min-height:220px;border:1px solid var(--line);border-radius:16px;background:var(--panel);backdrop-filter:blur(12px);box-shadow:0 0 28px #00a9d533, inset 0 0 25px #00a9d311;display:flex;flex-direction:column;overflow:hidden;transform:translateY(-1%)}
 .desktop.hidden{display:none}
 .titlebar{height:42px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #4edfff66;background:rgba(5,25,42,.88);font-size:12px;letter-spacing:1.5px;color:var(--cyan);touch-action:none;cursor:grab}
@@ -60,7 +60,7 @@ button{cursor:pointer}
 </head>
 <body>
 <div id="stage">
-  <section class="eye" id="leftEye"><video id="videoLeft" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerLeft"></div><div id="desktopWrap"><div class="desktop" id="desktopLeft">
+  <section class="eye" id="leftEye"><video id="videoLeft" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerLeft"></div><div class="desktopWrap"><div class="desktop" id="desktopLeft">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
     <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
@@ -69,7 +69,7 @@ button{cursor:pointer}
       <div class="appWindow" data-window="media"><h3>MÍDIA</h3><p>Central multimídia experimental.</p><div class="fakeRow">Nenhuma mídia carregada.</div></div>
     </div><div class="bottomBar"><span id="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
   </div></div></div>
-  <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div id="desktopWrap"><div class="desktop" id="desktopRight">
+  <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div class="desktopWrap"><div class="desktop" id="desktopRight">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
     <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
@@ -79,7 +79,7 @@ button{cursor:pointer}
     </div><div class="bottomBar"><span id="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
   </div></div></div>
 </div>
-<div id="hud"><span class="pill">MOBILE QUEST 0.5 · MIXED REALITY</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
+<div id="hud"><span class="pill">MOBILE QUEST 0.6 · DIVISÃO 50/50</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
 <div id="progress"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="19"/><circle class="value" id="progressRing" cx="22" cy="22" r="19"/></svg></div>
 <div id="handStatus">Aguardando câmera e rastreamento das mãos…</div>
 <div id="menu"><div class="card">
