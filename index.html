@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#050a12">
-<title>Mobile Quest 0.9 — Base estável</title>
+<title>Mobile Quest 1.0 — Dwell e Arrastar</title>
 <style>
 :root{--cyan:#65e5ff;--cyan2:#16bce8;--panel:rgba(5,16,29,.82);--line:rgba(91,218,255,.72);--shift:0px;--zoom:1}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -64,7 +64,7 @@ button{cursor:pointer}
 <div id="stage">
   <section class="eye" id="leftEye"><video id="videoLeft" autoplay muted playsinline></video><div class="eye-ui"><canvas class="handOverlay" id="handLeft" aria-hidden="true"></canvas><div class="crosshair"></div><div class="pointer" id="pointerLeft"></div><div class="desktopWrap"><div class="desktop" id="desktopLeft">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
-    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir. A mão é indicada por um esqueleto luminoso.</p>
+    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Use a ponta do indicador como mouse. Segure o dedo sobre um item por 2,5 segundos para selecionar. Faça pinça para agarrar e arrastar a janela.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
       <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
       <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
@@ -74,7 +74,7 @@ button{cursor:pointer}
   </section>
   <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><div class="eye-ui"><canvas class="handOverlay" id="handRight" aria-hidden="true"></canvas><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div class="desktopWrap"><div class="desktop" id="desktopRight">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
-    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir. A mão é indicada por um esqueleto luminoso.</p>
+    <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Use a ponta do indicador como mouse. Segure o dedo sobre um item por 2,5 segundos para selecionar. Faça pinça para agarrar e arrastar a janela.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
       <div class="appWindow" data-window="files"><h3>ARQUIVOS</h3><div class="fakeRow">▣ Documentos</div><div class="fakeRow">▣ Imagens</div><div class="fakeRow">▣ Projetos</div></div>
       <div class="appWindow" data-window="browser"><h3>NAVEGADOR</h3><p>Uma janela de navegação experimental.</p><button class="uiButton" data-action="web">ABRIR EXEMPLO</button><div class="fakeRow">Página inicial do Mobile Quest</div></div>
@@ -83,7 +83,7 @@ button{cursor:pointer}
   </div></div></div>
   </section>
 </div>
-<div id="hud"><span class="pill">MOBILE QUEST 0.9 · MODO ESTÁVEL</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
+<div id="hud"><span class="pill">MOBILE QUEST 1.0 · DWELL + ARRASTAR</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
 <div id="progress"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="19"/><circle class="value" id="progressRing" cx="22" cy="22" r="19"/></svg></div>
 <div id="handStatus">Aguardando câmera e rastreamento das mãos…</div>
 <div id="menu"><div class="card">
@@ -94,7 +94,7 @@ button{cursor:pointer}
   <div class="config"><label>Separação das imagens <span id="ipdValue">0 px</span></label><input id="ipd" type="range" min="-24" max="24" value="0"></div>
   <div class="config"><label>Zoom da câmera <span id="zoomValue">1.00x</span></label><input id="zoom" type="range" min="0.7" max="1.6" step="0.05" value="1"></div>
   <div id="status">Sistema aguardando inicialização.</div>
-  <p>Gestos: indicador aponta · pinça polegar + indicador seleciona/arrasta a barra superior · mantenha a mira por 5 segundos para selecionar. Controle: A seleciona · B volta/menu.</p>
+  <p>Gestos: indicador move o ponteiro · pare sobre um item por 2,5 segundos para selecionar · pinça polegar + indicador e mova a mão para arrastar a janela. Controle: A seleciona · B volta/menu.</p>
   <p style="font-size:10px;color:#829aaa">Esta versão prioriza estabilidade: não usa segmentação pesada. A mão aparece como um esqueleto luminoso sobre a interface, não como recorte fotográfico. HTTPS e internet são necessários para carregar o modelo MediaPipe.</p>
 </div></div>
 <script type="module">
@@ -109,9 +109,9 @@ const handCanvases=[$('handLeft'),$('handRight')];
 const HAND_CONNECTIONS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 let lastVideoTime=-1, lastDetect=0, handPoint=null, pinching=false, pinchWas=false;
 let pinchStart=null, dragTarget=null, dragOffset={x:0,y:0};
-let dwellTarget=null, dwellStart=0, lastGamepadA=false, lastGamepadB=false;
+let dwellTarget=null, dwellStart=0, dwellFired=false, lastGamepadA=false, lastGamepadB=false;
 let zoom=1, shift=0, cameraMode='environment';
-const DWELL_MS=5000;
+const DWELL_MS=2500;
 
 function status(msg){$('status').textContent=msg;$('handStatus').textContent=msg;}
 function showMenu(){menu.classList.remove('hidden');}
@@ -204,11 +204,23 @@ function updatePointer(localX,y,visible=true){
 }
 function updateDwell(target,now){
   const ring=$('progressRing'), progress=$('progress');
-  if(!target){dwellTarget=null;dwellStart=0;progress.style.display='none';ring.style.strokeDashoffset='119.4';return;}
-  if(target!==dwellTarget){dwellTarget=target;dwellStart=now;}
+  if(!target){
+    dwellTarget=null;dwellStart=0;dwellFired=false;
+    progress.style.display='none';ring.style.strokeDashoffset='119.4';return;
+  }
+  if(target!==dwellTarget){
+    dwellTarget=target;dwellStart=now;dwellFired=false;
+  }
+  if(dwellFired){progress.style.display='none';return;}
   const ratio=Math.min(1,(now-dwellStart)/DWELL_MS);
-  progress.style.display='block';ring.style.strokeDashoffset=String(119.4*(1-ratio));
-  if(ratio>=1){action(target);dwellTarget=null;dwellStart=0;progress.style.display='none';ring.style.strokeDashoffset='119.4';}
+  progress.style.display='block';
+  ring.style.strokeDashoffset=String(119.4*(1-ratio));
+  if(ratio>=1){
+    action(target);
+    dwellFired=true;
+    progress.style.display='none';
+    ring.style.strokeDashoffset='119.4';
+  }
 }
 function processHand(now){
   if(!handReady||videoL.readyState<2||now-lastDetect<70)return;
@@ -231,8 +243,11 @@ function processHand(now){
   const target=getInteractiveAt(x,y);
   if(pinching&&!wasPinching){
     pinchStart={x,y};
-    if(target?.hasAttribute('data-drag')){dragTarget=desktops;}
-    else if(target){action(target);}
+    // A pinça agarra a janela em qualquer ponto dela; não dispara cliques.
+    const desktop=target?.closest('.desktop');
+    if(desktop)dragTarget=desktops;
+    dwellTarget=null;dwellStart=0;dwellFired=false;
+    $('progress').style.display='none';
   }
   if(pinching&&dragTarget&&pinchStart){
     const dx=(x-pinchStart.x)*(innerWidth/2),dy=(y-pinchStart.y)*innerHeight;
@@ -264,7 +279,7 @@ async function enter(){
     try{await screen.orientation?.lock?.('landscape');}catch{}
     if(!handReady)startHandTracking();
     requestAnimationFrame(loop);
-    status('Realidade mista ativa. Mostre sua mão à câmera traseira.');
+    status('Realidade mista ativa. Indicador seleciona após 2,5 s; pinça arrasta a janela.');
   }catch(err){console.error(err);status(err.message||'Falha ao iniciar câmera.');showMenu();}
 }
 $('start').addEventListener('click',enter);
