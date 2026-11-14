@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#050810">
-<title>Mobile Quest 0.3</title>
+<title>Mobile Quest 0.4</title>
 
 <style>
 * {
@@ -121,18 +121,57 @@ input[type=range] {
     pointer-events: none;
 }
 
-#reticulo {
+.reticulo {
+    --progresso: 0deg;
     position: fixed;
-    z-index: 3;
+    z-index: 5;
+    top: 50%;
+    width: 34px;
+    height: 34px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+    background: conic-gradient(#5cddff var(--progresso), rgba(255,255,255,.12) 0);
+    filter: drop-shadow(0 0 5px #00dfff);
+}
+#reticulo-esquerdo { left: 25%; }
+#reticulo-direito { left: 75%; }
+.reticulo::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: rgba(2, 9, 17, .88);
+}
+.reticulo .ponto {
+    position: absolute;
+    z-index: 2;
     left: 50%;
     top: 50%;
-    width: 9px;
-    height: 9px;
+    width: 5px;
+    height: 5px;
     border: 1px solid white;
     border-radius: 50%;
-    transform: translate(-50%,-50%);
-    pointer-events: none;
-    box-shadow: 0 0 8px #00dfff;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 7px #00dfff;
+}
+.reticulo.travado {
+    filter: drop-shadow(0 0 8px #5cddff);
+}
+#voltar {
+    position: fixed;
+    z-index: 12;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    width: auto;
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 20px;
+    background: rgba(7, 24, 38, .88);
+    border: 1px solid #5cddff;
+    color: #fff;
+    font-size: 11px;
+    letter-spacing: 1px;
 }
 
 .oculto {
@@ -153,10 +192,12 @@ input[type=range] {
 
 <canvas id="vr"></canvas>
 
-<div id="reticulo" class="oculto"></div>
+<div id="reticulo-esquerdo" class="reticulo oculto"><div class="progresso"></div><div class="ponto"></div></div>
+<div id="reticulo-direito" class="reticulo oculto"><div class="progresso"></div><div class="ponto"></div></div>
+<button id="voltar" class="oculto" type="button">← VOLTAR</button>
 
 <div id="hud" class="oculto">
-    MOBILE QUEST 0.3 | FUTURE ROOM
+    MOBILE QUEST 0.4 | OLHE POR 5 SEGUNDOS PARA SELECIONAR
 </div>
 
 <div id="menu">
@@ -207,7 +248,7 @@ input[type=range] {
         </div>
 
         <p>
-            A: selecionar | B: menu<br>
+            Olhe para uma opção por 5 segundos para selecionar.<br>A: selecionar | B: menu<br>
             Analógico esquerdo: movimentar<br>
             Analógico direito: girar
         </p>
@@ -233,7 +274,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, 1.25)
+    Math.min(window.devicePixelRatio || 1, 1.1)
 );
 
 renderer.setSize(
@@ -502,13 +543,9 @@ for (let i = 0; i < 8; i++) {
 let sensorAtivo = false;
 let sensorRecebido = false;
 
-let calibracaoSensor = new THREE.Quaternion();
-
+const calibracaoSensor = new THREE.Quaternion();
 const orientacaoAlvo = new THREE.Quaternion();
 const orientacaoSuave = new THREE.Quaternion();
-
-const orientacaoReferencia = new THREE.Quaternion();
-
 const eulerSensor = new THREE.Euler(0, 0, 0, "YXZ");
 
 const eixoZ = new THREE.Vector3(0, 0, 1);
@@ -517,24 +554,16 @@ const eixoY = new THREE.Vector3(0, 1, 0);
 
 const ajusteTela = new THREE.Quaternion();
 const ajusteDispositivo = new THREE.Quaternion();
+const qSensor = new THREE.Quaternion();
+const qTemporario = new THREE.Quaternion();
 
-const quaternionManual = new THREE.Quaternion();
-
-ajusteDispositivo.setFromAxisAngle(
-    eixoX,
-    -Math.PI / 2
-);
+ajusteDispositivo.setFromAxisAngle(eixoX, -Math.PI / 2);
 
 let manualYaw = 0;
 let manualPitch = 0;
 
 function orientacao(evento) {
-
-    if (
-        evento.alpha === null ||
-        evento.beta === null ||
-        evento.gamma === null
-    ) return;
+    if (evento.alpha === null || evento.beta === null || evento.gamma === null) return;
 
     eulerSensor.set(
         THREE.MathUtils.degToRad(evento.beta),
@@ -543,14 +572,9 @@ function orientacao(evento) {
         "YXZ"
     );
 
-    const qSensor = new THREE.Quaternion()
-        .setFromEuler(eulerSensor);
+    qSensor.setFromEuler(eulerSensor);
 
-    const anguloTela =
-        screen.orientation?.angle ??
-        window.orientation ??
-        0;
-
+    const anguloTela = screen.orientation?.angle ?? window.orientation ?? 0;
     ajusteTela.setFromAxisAngle(
         eixoZ,
         -THREE.MathUtils.degToRad(anguloTela)
@@ -560,54 +584,33 @@ function orientacao(evento) {
         .multiply(ajusteDispositivo)
         .multiply(ajusteTela);
 
+    // A primeira leitura define a posição neutra automaticamente.
     if (!sensorRecebido) {
-
-        orientacaoReferencia.copy(orientacaoAlvo);
-
+        calibracaoSensor.copy(orientacaoAlvo).invert();
+        orientacaoSuave.identity();
         sensorRecebido = true;
+        mostrarMensagem("Sensor ativo. Visão calibrada.");
     }
 }
 
 async function ativarSensor() {
-
     try {
-
         if (typeof DeviceOrientationEvent === "undefined") {
-            throw new Error("Sensor não disponível.");
+            throw new Error("Sensor de orientação não disponível neste navegador.");
         }
 
-        if (
-            typeof DeviceOrientationEvent.requestPermission ===
-            "function"
-        ) {
-
-            const permissao =
-                await DeviceOrientationEvent.requestPermission();
-
-            if (permissao !== "granted") {
-                throw new Error("Permissão negada.");
-            }
+        if (typeof DeviceOrientationEvent.requestPermission === "function") {
+            const permissao = await DeviceOrientationEvent.requestPermission();
+            if (permissao !== "granted") throw new Error("Permissão do sensor negada.");
         }
 
-        window.removeEventListener(
-            "deviceorientation",
-            orientacao
-        );
-
-        window.addEventListener(
-            "deviceorientation",
-            orientacao,
-            true
-        );
-
+        window.removeEventListener("deviceorientation", orientacao, true);
+        window.addEventListener("deviceorientation", orientacao, true);
         sensorAtivo = true;
-
-        mostrarMensagem("Aguardando dados do sensor...");
-
+        sensorRecebido = false;
+        mostrarMensagem("Mantenha o celular na posição neutra por um instante...");
     } catch (erro) {
-
         mostrarMensagem(erro.message);
-
     }
 }
 
@@ -616,19 +619,15 @@ async function ativarSensor() {
 // ==========================================
 
 function recentralizar() {
-
     if (!sensorRecebido) {
-        mostrarMensagem("Aguardando sensor.");
+        mostrarMensagem("Aguardando dados do sensor.");
         return;
     }
 
     calibracaoSensor.copy(orientacaoAlvo).invert();
-
     orientacaoSuave.identity();
-
     manualYaw = 0;
     manualPitch = 0;
-
     mostrarMensagem("Visão recentralizada.");
 }
 
@@ -641,39 +640,24 @@ document.getElementById("recentralizar").onclick =
 
 const rotacaoYaw = new THREE.Quaternion();
 const rotacaoPitch = new THREE.Quaternion();
+const orientacaoFinal = new THREE.Quaternion();
 
 function atualizarVisao(delta) {
-
     if (sensorAtivo && sensorRecebido) {
-
-        const relativa = new THREE.Quaternion()
-            .copy(calibracaoSensor)
-            .multiply(orientacaoAlvo);
-
-        orientacaoReferencia.slerp(
-            relativa,
+        qTemporario.copy(calibracaoSensor).multiply(orientacaoAlvo);
+        orientacaoSuave.slerp(
+            qTemporario,
             1 - Math.pow(0.001, delta)
         );
-
     } else {
-
-        orientacaoReferencia.identity();
-
+        orientacaoSuave.identity();
     }
 
-    rotacaoYaw.setFromAxisAngle(
-        eixoY,
-        manualYaw
-    );
+    rotacaoYaw.setFromAxisAngle(eixoY, manualYaw);
+    rotacaoPitch.setFromAxisAngle(eixoX, manualPitch);
 
-    rotacaoPitch.setFromAxisAngle(
-        eixoX,
-        manualPitch
-    );
-
-    const orientacaoFinal = new THREE.Quaternion()
-        .copy(rotacaoYaw)
-        .multiply(orientacaoReferencia)
+    orientacaoFinal.copy(rotacaoYaw)
+        .multiply(orientacaoSuave)
         .multiply(rotacaoPitch);
 
     cameraCentral.quaternion.copy(orientacaoFinal);
@@ -684,34 +668,73 @@ function atualizarVisao(delta) {
 // ==========================================
 
 const raycaster = new THREE.Raycaster();
-
 const centro = new THREE.Vector2(0, 0);
+raycaster.far = 8; // Alcance máximo de seleção: 8 metros virtuais.
 
 let alvoAtual = null;
+let alvoAnterior = null;
+let tempoNoAlvo = 0;
+const TEMPO_SELECAO = 5;
+const reticulos = [
+    document.getElementById("reticulo-esquerdo"),
+    document.getElementById("reticulo-direito")
+];
 
-function verificarOlhar() {
+function atualizarProgressoOlhar() {
+    const progresso = Math.min(tempoNoAlvo / TEMPO_SELECAO, 1) * 360;
+    reticulos.forEach(reticulo => {
+        reticulo.style.setProperty("--progresso", progresso + "deg");
+        reticulo.classList.toggle("travado", !!alvoAtual);
+    });
+}
 
-    raycaster.setFromCamera(
-        centro,
-        cameraCentral
-    );
+function verificarOlhar(delta) {
+    if (!menu.classList.contains("oculto")) {
+        alvoAtual = null;
+        alvoAnterior = null;
+        tempoNoAlvo = 0;
+        atualizarProgressoOlhar();
+        return;
+    }
 
-    const encontrados = raycaster.intersectObjects(
-        interativos
-    );
+    raycaster.setFromCamera(centro, cameraCentral);
+    const encontrados = raycaster.intersectObjects(interativos, false);
+    const novoAlvo = encontrados.length ? encontrados[0].object : null;
 
-    alvoAtual = encontrados.length
-        ? encontrados[0].object
-        : null;
+    if (novoAlvo !== alvoAnterior) {
+        alvoAnterior = novoAlvo;
+        alvoAtual = novoAlvo;
+        tempoNoAlvo = 0;
+    } else {
+        alvoAtual = novoAlvo;
+        if (alvoAtual?.userData.acao) {
+            tempoNoAlvo += delta;
+            if (tempoNoAlvo >= TEMPO_SELECAO) {
+                const selecionado = alvoAtual;
+                tempoNoAlvo = 0;
+                alvoAnterior = null;
+                alvoAtual = null;
+                selecionado.userData.acao();
+            }
+        } else {
+            tempoNoAlvo = 0;
+        }
+    }
+
+    atualizarProgressoOlhar();
 }
 
 function selecionar() {
-
-    if (alvoAtual?.userData.acao) {
-        alvoAtual.userData.acao();
+    if (menu.classList.contains("oculto") && alvoAtual?.userData.acao) {
+        const selecionado = alvoAtual;
+        tempoNoAlvo = 0;
+        alvoAnterior = null;
+        alvoAtual = null;
+        selecionado.userData.acao();
     }
 }
 
+// Clique/toque no canvas também seleciona, sem impedir os botões da interface.
 canvas.addEventListener("click", selecionar);
 
 // ==========================================
@@ -722,111 +745,67 @@ let botaoAAnterior = false;
 let botaoBAnterior = false;
 
 function eixo(gamepad, indice) {
-
-    const valor = gamepad.axes[indice] || 0;
-
-    return Math.abs(valor) < 0.15 ? 0 : valor;
+    const valor = Number(gamepad.axes[indice] || 0);
+    const deadzone = 0.18;
+    if (Math.abs(valor) < deadzone) return 0;
+    return Math.sign(valor) * (Math.abs(valor) - deadzone) / (1 - deadzone);
 }
 
+const vetorFrente = new THREE.Vector3();
+const vetorDireita = new THREE.Vector3();
+const movimento = new THREE.Vector3();
+
 function verificarControle(delta) {
-
     const controles = navigator.getGamepads?.() || [];
+    const gamepad = Array.from(controles).find(g => g && g.connected);
 
-    const gamepad = Array.from(controles).find(g => g);
-
-    if (!gamepad) return;
-
-    // BOTÃO A: selecionar
-
-    const botaoA =
-        gamepad.buttons[0]?.pressed || false;
-
-    if (botaoA && !botaoAAnterior) {
-        selecionar();
+    if (!gamepad) {
+        botaoAAnterior = false;
+        botaoBAnterior = false;
+        return;
     }
+
+    const botaoA = !!gamepad.buttons[0]?.pressed;
+    const botaoB = !!gamepad.buttons[1]?.pressed;
+
+    if (botaoA && !botaoAAnterior) selecionar();
+    if (botaoB && !botaoBAnterior) alternarMenu();
 
     botaoAAnterior = botaoA;
-
-    // BOTÃO B: menu
-
-    const botaoB =
-        gamepad.buttons[1]?.pressed || false;
-
-    if (botaoB && !botaoBAnterior) {
-        alternarMenu();
-    }
-
     botaoBAnterior = botaoB;
 
-    // ANALÓGICO ESQUERDO: andar
+    // Não movimenta o personagem enquanto o menu estiver aberto.
+    if (!menu.classList.contains("oculto")) return;
 
     const lx = eixo(gamepad, 0);
     const ly = eixo(gamepad, 1);
 
-    const direcao = new THREE.Vector3(
-        -Math.sin(manualYaw),
-        0,
-        -Math.cos(manualYaw)
-    );
+    // Movimento acompanha a direção horizontal para onde a cabeça está olhando.
+    cameraCentral.getWorldDirection(vetorFrente);
+    vetorFrente.y = 0;
+    if (vetorFrente.lengthSq() > 0.0001) vetorFrente.normalize();
 
-    const direita = new THREE.Vector3(
-        Math.cos(manualYaw),
-        0,
-        -Math.sin(manualYaw)
-    );
+    vetorDireita.set(vetorFrente.z, 0, -vetorFrente.x);
+    movimento.set(0, 0, 0);
+    movimento.addScaledVector(vetorDireita, lx);
+    movimento.addScaledVector(vetorFrente, -ly);
 
-    const movimento = new THREE.Vector3();
+    if (movimento.lengthSq() > 1) movimento.normalize();
+    cameraCentral.position.addScaledVector(movimento, 2.8 * delta);
 
-    movimento.addScaledVector(direita, lx);
-    movimento.addScaledVector(direcao, -ly);
+    cameraCentral.position.x = THREE.MathUtils.clamp(cameraCentral.position.x, -4.5, 4.5);
+    cameraCentral.position.z = THREE.MathUtils.clamp(cameraCentral.position.z, -7.5, 3.5);
 
-    if (movimento.lengthSq() > 1) {
-        movimento.normalize();
-    }
-
-    cameraCentral.position.addScaledVector(
-        movimento,
-        2.5 * delta
-    );
-
-    // LIMITES DA SALA
-
-    cameraCentral.position.x =
-        THREE.MathUtils.clamp(
-            cameraCentral.position.x,
-            -4.5, 4.5
-        );
-
-    cameraCentral.position.z =
-        THREE.MathUtils.clamp(
-            cameraCentral.position.z,
-            -7.5, 3.5
-        );
-
-    // ANALÓGICO DIREITO: olhar
-
+    // Analógico direito: giro manual. Alguns controles Android usam eixos 2 e 3.
     const rx = eixo(gamepad, 2);
     const ry = eixo(gamepad, 3);
-
-    manualYaw -= rx * delta * 2;
-    manualPitch -= ry * delta * 1.5;
-
-    manualPitch = THREE.MathUtils.clamp(
-        manualPitch,
-        -0.7,
-        0.7
-    );
+    manualYaw -= rx * delta * 2.2;
+    manualPitch -= ry * delta * 1.7;
+    manualPitch = THREE.MathUtils.clamp(manualPitch, -0.7, 0.7);
 }
 
-window.addEventListener(
-    "gamepadconnected",
-    () => mostrarMensagem("Controle conectado!")
-);
-
-window.addEventListener(
-    "gamepaddisconnected",
-    () => mostrarMensagem("Controle desconectado.")
-);
+window.addEventListener("gamepadconnected", () => mostrarMensagem("Controle conectado!"));
+window.addEventListener("gamepaddisconnected", () => mostrarMensagem("Controle desconectado."));
 
 // ==========================================
 // 13. INTERFACE
@@ -836,10 +815,14 @@ const menu = document.getElementById("menu");
 
 function abrirMenu() {
     menu.classList.remove("oculto");
+    document.getElementById("voltar").classList.add("oculto");
 }
 
 function fecharMenu() {
     menu.classList.add("oculto");
+    if (!document.getElementById("hud").classList.contains("oculto")) {
+        document.getElementById("voltar").classList.remove("oculto");
+    }
 }
 
 function alternarMenu() {
@@ -853,11 +836,12 @@ function alternarMenu() {
 }
 
 function mostrarMensagem(texto) {
-
-    document.getElementById("status").textContent =
-        texto;
-
+    document.getElementById("status").textContent = texto;
 }
+
+document.getElementById("voltar").addEventListener("click", () => {
+    abrirMenu();
+});
 
 // ==========================================
 // 14. CALIBRAÇÃO IPD E ZOOM
@@ -902,8 +886,8 @@ document.getElementById("entrar").onclick =
         document.getElementById("hud")
             .classList.remove("oculto");
 
-        document.getElementById("reticulo")
-            .classList.remove("oculto");
+        reticulos.forEach(reticulo => reticulo.classList.remove("oculto"));
+        document.getElementById("voltar").classList.remove("oculto");
 
         try {
 
@@ -932,7 +916,7 @@ document.getElementById("entrar").onclick =
 document.addEventListener("keydown", (e) => {
 
     if (e.key === "Escape") {
-        alternarMenu();
+        abrirMenu();
     }
 
     if (e.key === "Enter") {
@@ -956,6 +940,8 @@ function animar() {
         0.05
     );
 
+    if (document.hidden) return;
+
     const largura = window.innerWidth;
     const altura = window.innerHeight;
 
@@ -965,7 +951,7 @@ function animar() {
 
     verificarControle(delta);
 
-    verificarOlhar();
+    verificarOlhar(delta);
 
     // Movimento de iluminação
 
@@ -974,11 +960,15 @@ function animar() {
 
     // Câmeras independentes
 
-    cameraLeft.fov =
-        cameraCentral.fov / zoom;
-
-    cameraRight.fov =
-        cameraCentral.fov / zoom;
+    const fovComZoom = THREE.MathUtils.clamp(
+        THREE.MathUtils.radToDeg(
+            2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(75) / 2) / zoom)
+        ),
+        35,
+        110
+    );
+    cameraLeft.fov = fovComZoom;
+    cameraRight.fov = fovComZoom;
 
     cameraLeft.aspect = metade / altura;
     cameraRight.aspect = (largura - metade) / altura;
@@ -1033,12 +1023,8 @@ function animar() {
 // ==========================================
 
 window.addEventListener("resize", () => {
-
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
-
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.1));
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 const clock = new THREE.Clock();
