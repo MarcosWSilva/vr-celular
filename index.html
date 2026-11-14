@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#050a12">
-<title>Mobile Quest 0.7 — Dois olhos corrigidos</title>
+<title>Mobile Quest 0.8 — Mãos em primeiro plano</title>
 <style>
 :root{--cyan:#65e5ff;--cyan2:#16bce8;--panel:rgba(5,16,29,.82);--line:rgba(91,218,255,.72);--shift:0px;--zoom:1}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -16,7 +16,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:
 .eye video{position:absolute;width:100%;height:100%;inset:0;object-fit:cover;transform:scale(var(--zoom));transform-origin:center}
 .eye:first-child video{transform:translateX(calc(var(--shift) * -1)) scale(var(--zoom))}
 .eye:last-child video{transform:translateX(var(--shift)) scale(var(--zoom))}
-.eye-ui{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.eye-ui{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:auto}
+.hand-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:8}
+.desktopWrap{z-index:4}
+.pointer{z-index:12}
+.desktop{transform:perspective(900px) rotateY(-2deg) translateZ(0) translateY(-1%);transform-style:preserve-3d}
+#leftEye .desktop{transform:perspective(900px) rotateY(2deg) translateY(-1%)}
+#rightEye .desktop{transform:perspective(900px) rotateY(-2deg) translateY(-1%)}
 .crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;border:1px solid rgba(255,255,255,.95);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 7px #00d9ff}
 .pointer{position:absolute;width:22px;height:22px;left:50%;top:50%;border:2px solid var(--cyan);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 12px #00cfff;background:#00cfff22;display:none}
 .pointer:after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;left:7px;top:7px}
@@ -62,7 +68,7 @@ button{cursor:pointer}
 </head>
 <body>
 <div id="stage">
-  <section class="eye" id="leftEye"><video id="videoLeft" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerLeft"></div><div class="desktopWrap"><div class="desktop" id="desktopLeft">
+  <section class="eye" id="leftEye"><video id="videoLeft" autoplay muted playsinline></video><canvas class="hand-layer" id="handCanvasLeft"></canvas><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerLeft"></div><div class="desktopWrap"><div class="desktop" id="desktopLeft">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
     <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
@@ -72,7 +78,7 @@ button{cursor:pointer}
     </div><div class="bottomBar"><span class="appHint">3 aplicativos disponíveis</span><button class="backBtn" data-action="back">VOLTAR</button></div>
   </div></div></div>
   </section>
-  <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div class="desktopWrap"><div class="desktop" id="desktopRight">
+  <section class="eye" id="rightEye"><video id="videoRight" autoplay muted playsinline></video><canvas class="hand-layer" id="handCanvasRight"></canvas><div class="eye-ui"><div class="crosshair"></div><div class="pointer" id="pointerRight"></div><div class="desktopWrap"><div class="desktop" id="desktopRight">
     <div class="titlebar" data-drag="true"><span>◈ MOBILE QUEST <small>SPATIAL DESKTOP</small></span><span>● ONLINE</span></div>
     <div class="desktopBody"><p class="welcome">Bem-vindo ao seu espaço de trabalho.</p><p class="sub">Aponte o indicador e faça uma pinça para interagir.</p>
       <div class="appGrid" data-home="true"><div class="app" data-app="files"><span class="ico">▤</span>ARQUIVOS</div><div class="app" data-app="browser"><span class="ico">◎</span>NAVEGADOR</div><div class="app" data-app="media"><span class="ico">▶</span>MÍDIA</div></div>
@@ -83,33 +89,38 @@ button{cursor:pointer}
   </div></div></div>
   </section>
 </div>
-<div id="hud"><span class="pill">MOBILE QUEST 0.7 · DOIS OLHOS</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
+<div id="hud"><span class="pill">MOBILE QUEST 0.8 · HAND MR</span><span class="pill" id="trackingLabel">MÃOS: INICIANDO</span></div>
 <div id="progress"><svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="19"/><circle class="value" id="progressRing" cx="22" cy="22" r="19"/></svg></div>
 <div id="handStatus">Aguardando câmera e rastreamento das mãos…</div>
 <div id="menu"><div class="card">
-  <h1>MOBILE QUEST</h1><p>Realidade mista experimental para Galaxy S24 + VR Box. Veja o ambiente pela câmera traseira e interaja com o desktop virtual usando gestos.</p>
+  <h1>MOBILE QUEST</h1><p>Realidade mista experimental para Galaxy S24 + VR Box. A mão pode ser recortada da câmera e composta na frente do desktop; a profundidade é uma aproximação 2.5D, não 6DoF real.</p>
   <button class="menuBtn primary" id="start">INICIAR REALIDADE MISTA</button>
   <button class="menuBtn" id="startHands">ATIVAR RASTREAMENTO DAS MÃOS</button>
   <h2>CALIBRAÇÃO DA VISÃO</h2>
   <div class="config"><label>Separação das imagens <span id="ipdValue">0 px</span></label><input id="ipd" type="range" min="-24" max="24" value="0"></div>
   <div class="config"><label>Zoom da câmera <span id="zoomValue">1.00x</span></label><input id="zoom" type="range" min="0.7" max="1.6" step="0.05" value="1"></div>
   <div id="status">Sistema aguardando inicialização.</div>
-  <p>Gestos: indicador aponta · pinça polegar + indicador clica/arrasta · olhar parado por 5 segundos seleciona. Controle: A seleciona · B volta/menu.</p>
+  <p>Gestos: indicador aponta · pinça seleciona · segure a barra superior para arrastar · mantenha o olhar por 5 segundos para selecionar. A mão segmentada é desenhada sobre o menu quando o modelo de recorte funciona. Controle: A seleciona · B volta/menu.</p>
   <p style="font-size:10px;color:#829aaa">A câmera e o reconhecimento de mãos precisam de HTTPS e conexão com a internet para carregar o modelo do MediaPipe. O rastreamento usa a câmera traseira; mantenha a mão visível no campo de visão.</p>
 </div></div>
 <script type="module">
-import { FilesetResolver, HandLandmarker } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm';
+import { FilesetResolver, HandLandmarker, ImageSegmenter } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm';
 
 const $=id=>document.getElementById(id);
 const videoL=$('videoLeft'), videoR=$('videoRight'), menu=$('menu');
 const pointers=[$('pointerLeft'),$('pointerRight')];
+const handCanvases=[$('handCanvasLeft'),$('handCanvasRight')];
+const handCtx=handCanvases.map(c=>c.getContext('2d',{alpha:true}));
+let imageSegmenter=null, segmentReady=false, lastSegment=0, segmentBusy=false;
 const desktops=[$('desktopLeft'),$('desktopRight')];
 let stream=null, handLandmarker=null, handReady=false, running=false;
 let lastVideoTime=-1, lastDetect=0, handPoint=null, pinching=false, pinchWas=false;
-let pinchStart=null, dragTarget=null, dragOffset={x:0,y:0};
+let pinchStart=null, dragTarget=null, dragOrigin=null, pinchTarget=null;
 let dwellTarget=null, dwellStart=0, lastGamepadA=false, lastGamepadB=false;
 let zoom=1, shift=0, cameraMode='environment';
+let lastActionAt=0;
 const DWELL_MS=5000;
+const PINCH_ON=0.050, PINCH_OFF=0.075;
 
 function status(msg){$('status').textContent=msg;$('handStatus').textContent=msg;}
 function showMenu(){menu.classList.remove('hidden');}
@@ -139,7 +150,13 @@ async function startHandTracking(){
     }catch(gpuError){
       handLandmarker=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'},runningMode:'VIDEO',numHands:1});
     }
-    handReady=true; $('trackingLabel').textContent='MÃOS: PRONTO'; status('Rastreamento pronto. Mostre sua mão à câmera.');
+    handReady=true;
+    try{
+      imageSegmenter=await ImageSegmenter.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/1/selfie_segmenter.tflite',delegate:'GPU'},runningMode:'VIDEO',outputCategoryMask:true,outputConfidenceMasks:false});
+      segmentReady=true;
+    }catch(segErr){console.warn('Segmentação indisponível; cursor continuará ativo.',segErr);}
+    $('trackingLabel').textContent=segmentReady?'MÃOS: MR ATIVO':'MÃOS: RASTREIO';
+    status(segmentReady?'Rastreamento e recorte de primeiro plano prontos.':'Rastreamento pronto; recorte da mão indisponível neste navegador.');
   }catch(err){console.error(err);$('trackingLabel').textContent='MÃOS: ERRO';status('Não foi possível carregar o MediaPipe. Verifique a internet e recarregue.');}
 }
 
@@ -174,12 +191,46 @@ function mapCameraPoint(nx,ny){
   x=(x-.5)*zoom+.5; y=(y-.5)*zoom+.5;
   return {x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))};
 }
-function getInteractiveAt(localX,y){
-  const el=document.elementFromPoint(localX*(innerWidth/2),y*innerHeight);
-  return el?.closest('[data-app],[data-action]')||null;
+function eyeTargetAt(localX,y,eyeIndex){
+  const eye=document.getElementById(eyeIndex===0?'leftEye':'rightEye');
+  const rect=eye.getBoundingClientRect();
+  const el=document.elementFromPoint(rect.left+localX*rect.width,rect.top+y*rect.height);
+  return el?.closest('[data-app],[data-action],.titlebar')||null;
 }
+function getInteractiveAt(localX,y){return eyeTargetAt(localX,y,0)||eyeTargetAt(localX,y,1);}
 function updatePointer(localX,y,visible=true){
   pointers.forEach(p=>{p.style.display=visible?'block':'none';p.style.left=(localX*100)+'%';p.style.top=(y*100)+'%';p.classList.toggle('pinch',pinching);});
+}
+function renderHandForeground(now){
+  if(!segmentReady||!imageSegmenter||segmentBusy||now-lastSegment<90||videoL.readyState<2)return;
+  segmentBusy=true;lastSegment=now;
+  try{
+    const result=imageSegmenter.segmentForVideo(videoL,now);
+    const mask=result.categoryMask;
+    if(!mask)return;
+    const mw=mask.width,mh=mask.height, data=mask.getAsUint8Array();
+    const off=document.createElement('canvas');off.width=mw;off.height=mh;
+    const ctx=off.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(videoL,0,0,mw,mh);
+    const frame=ctx.getImageData(0,0,mw,mh);
+    for(let i=0;i<data.length;i++){
+      const v=data[i];
+      frame.data[i*4+3]=v>0?Math.min(255,Math.max(0,(v-1)*90+190)):0;
+    }
+    ctx.putImageData(frame,0,0);
+    for(let n=0;n<2;n++){
+      const c=handCanvases[n], cctx=handCtx[n], rect=c.getBoundingClientRect();
+      const w=Math.max(1,Math.round(rect.width*devicePixelRatio)),h=Math.max(1,Math.round(rect.height*devicePixelRatio));
+      if(c.width!==w||c.height!==h){c.width=w;c.height=h;}
+      cctx.clearRect(0,0,w,h);
+      const sourceAspect=mw/mh, destAspect=w/h;let sx=0,sy=0,sw=mw,sh=mh;
+      if(sourceAspect>destAspect){sw=mh*destAspect;sx=(mw-sw)/2;}else{sh=mw/destAspect;sy=(mh-sh)/2;}
+      // Match the camera crop and zoom used by the video element.
+      const zw=sw/zoom,zh=sh/zoom,zx=sx+(sw-zw)/2,zy=sy+(sh-zh)/2;
+      cctx.drawImage(off,zx,zy,zw,zh,0,0,w,h);
+    }
+  }catch(e){console.warn('Falha na segmentação:',e);}
+  finally{segmentBusy=false;}
 }
 function updateDwell(target,now){
   const ring=$('progressRing'), progress=$('progress');
@@ -190,39 +241,36 @@ function updateDwell(target,now){
   if(ratio>=1){action(target);dwellTarget=null;dwellStart=0;progress.style.display='none';ring.style.strokeDashoffset='119.4';}
 }
 function processHand(now){
-  if(!handReady||videoL.readyState<2||now-lastDetect<45)return;
+  if(!handReady||videoL.readyState<2||now-lastDetect<33)return;
   lastDetect=now;
   if(videoL.currentTime===lastVideoTime)return;
   lastVideoTime=videoL.currentTime;
   const result=handLandmarker.detectForVideo(videoL,now);
+  renderHandForeground(now);
   const landmarks=result.landmarks?.[0];
-  if(!landmarks){handPoint=null;pinching=false;updatePointer(.5,.5,false);updateDwell(null,now);$('trackingLabel').textContent='MÃOS: NÃO DETECTADAS';return;}
-  // Indicador (ponta 8) e pinça (polegar 4 + indicador 8).
-  const tip=landmarks[8], thumb=landmarks[4];
-  // Converte as coordenadas do vídeo para o recorte visível em cada lente.
-  const mapped=mapCameraPoint(tip.x,tip.y);
-  const x=mapped.x, y=mapped.y;
-  handPoint={x,y};
+  if(!landmarks){handPoint=null;pinching=false;pinchWas=false;dragTarget=null;handCtx.forEach((ctx,i)=>ctx.clearRect(0,0,handCanvases[i].width,handCanvases[i].height));updatePointer(.5,.5,false);updateDwell(null,now);$('trackingLabel').textContent='MÃOS: NÃO DETECTADAS';return;}
+  const tip=landmarks[8],thumb=landmarks[4];
+  const mapped=mapCameraPoint(tip.x,tip.y),x=mapped.x,y=mapped.y;
+  handPoint={x,y,z:tip.z};
   const pinchDistance=Math.hypot(tip.x-thumb.x,tip.y-thumb.y);
-  pinching=pinchDistance<0.055;
+  pinching=pinchWas?pinchDistance<PINCH_OFF:pinchDistance<PINCH_ON;
   updatePointer(x,y,true);
   $('trackingLabel').textContent=pinching?'MÃOS: PINÇA':'MÃOS: DETECTADAS';
   const target=getInteractiveAt(x,y);
   if(pinching&&!pinchWas){
-    pinchStart={x,y};
-    if(target){action(target);}
-    else{
-      const under=document.elementFromPoint(x*(innerWidth/2),y*innerHeight);
-      if(under?.closest('.titlebar')){dragTarget=desktops;}
-    }
+    pinchStart={x,y};pinchTarget=target;
+    if(target?.closest('.titlebar')){
+      dragTarget=desktops;
+      dragOrigin={x:parseFloat(desktops[0].dataset.dx||'0'),y:parseFloat(desktops[0].dataset.dy||'0')};
+    }else if(target){action(target);lastActionAt=now;}
   }
-  if(pinching&&dragTarget&&pinchStart){
+  if(pinching&&dragTarget&&pinchStart&&dragOrigin){
     const dx=(x-pinchStart.x)*(innerWidth/2),dy=(y-pinchStart.y)*innerHeight;
-    dragTarget.forEach(d=>d.style.translate=`${dx}px ${dy}px`);
+    const nx=dragOrigin.x+dx,ny=dragOrigin.y+dy;
+    dragTarget.forEach(d=>{d.style.translate=`${nx}px ${ny}px`;d.dataset.dx=nx;d.dataset.dy=ny;});
   }
-  if(!pinching&&pinchWas){dragTarget=null;pinchStart=null;}
+  if(!pinching&&pinchWas){dragTarget=null;pinchStart=null;dragOrigin=null;pinchTarget=null;}
   pinchWas=pinching;
-  // Seleção por permanência de 5 s como alternativa à pinça.
   updateDwell(pinching?null:target,now);
 }
 
@@ -254,7 +302,7 @@ async function enter(){
 $('start').addEventListener('click',enter);
 $('startHands').addEventListener('click',async()=>{try{await startCamera();await startHandTracking();}catch(e){status(e.message);}});
 $('menu').addEventListener('click',e=>{if(e.target===menu){} });
-document.addEventListener('click',e=>{const target=e.target.closest('[data-app],[data-action]');if(target)action(target);});
+document.addEventListener('click',e=>{if(running)return;const target=e.target.closest('[data-app],[data-action]');if(target)action(target);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Backspace'){e.preventDefault();back();}});
 window.addEventListener('gamepadconnected',()=>status('Controle Bluetooth conectado.'));
 window.addEventListener('gamepaddisconnected',()=>status('Controle desconectado.'));
