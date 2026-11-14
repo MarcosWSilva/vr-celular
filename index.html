@@ -5,10 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#050810">
-<title>Mobile Quest 0.2</title>
+<title>Mobile Quest 0.3</title>
 
 <style>
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
 body {
     margin: 0;
@@ -30,17 +33,20 @@ body {
 #menu {
     position: fixed;
     inset: 0;
-    z-index: 5;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(3,7,15,.94);
     padding: 20px;
+    background: rgba(3,7,15,.92);
+    backdrop-filter: blur(12px);
 }
 
 .card {
     width: min(100%, 390px);
-    padding: 25px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
     border: 1px solid #17445b;
     border-radius: 16px;
     background: #0b1420;
@@ -53,6 +59,12 @@ h1 {
     font-size: 23px;
 }
 
+h2 {
+    font-size: 16px;
+    margin-top: 22px;
+    color: #70dfff;
+}
+
 p {
     color: #a5b5c5;
     font-size: 13px;
@@ -61,56 +73,78 @@ p {
 
 button {
     width: 100%;
-    margin-top: 12px;
+    margin-top: 10px;
     padding: 14px;
     border: 1px solid #24617a;
     border-radius: 8px;
     background: #102b40;
     color: white;
     font-weight: bold;
+    cursor: pointer;
 }
 
 button:active {
     background: #176080;
 }
 
+.config {
+    margin-top: 17px;
+}
+
+.config label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: #b9d4e4;
+}
+
+input[type=range] {
+    width: 100%;
+    accent-color: #5cddff;
+}
+
 #status {
     margin-top: 16px;
     color: #5cddff;
     font-size: 12px;
+    min-height: 18px;
 }
 
 #hud {
     position: fixed;
-    z-index: 3;
+    z-index: 4;
     top: 12px;
     left: 12px;
-    font-size: 10px;
     color: #69e5ff;
+    font-size: 10px;
     pointer-events: none;
 }
 
 #reticulo {
     position: fixed;
+    z-index: 3;
     left: 50%;
     top: 50%;
-    width: 7px;
-    height: 7px;
+    width: 9px;
+    height: 9px;
     border: 1px solid white;
     border-radius: 50%;
     transform: translate(-50%,-50%);
-    z-index: 2;
     pointer-events: none;
+    box-shadow: 0 0 8px #00dfff;
 }
 
-.oculto { display: none !important; }
+.oculto {
+    display: none !important;
+}
 </style>
 
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js"
-  }
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js"
+    }
 }
 </script>
 </head>
@@ -122,43 +156,100 @@ button:active {
 <div id="reticulo" class="oculto"></div>
 
 <div id="hud" class="oculto">
-    MOBILE QUEST 0.2 | FUTURE ROOM
+    MOBILE QUEST 0.3 | FUTURE ROOM
 </div>
 
 <div id="menu">
+
     <div class="card">
+
         <h1>MOBILE QUEST</h1>
-        <p>Ambiente virtual experimental.</p>
-        <p>Prepare seu VR Box e coloque o celular na posição horizontal.</p>
 
-        <button id="sensor">ATIVAR HEAD TRACKING</button>
-        <button id="entrar">ENTRAR NA SALA VIRTUAL</button>
+        <p>
+            Sua plataforma de realidade virtual.
+            Ambiente experimental 3D.
+        </p>
 
-        <div id="status">Sistema aguardando.</div>
+        <button id="sensor">
+            ATIVAR HEAD TRACKING
+        </button>
+
+        <button id="entrar">
+            ENTRAR NA SALA VIRTUAL
+        </button>
+
+        <h2>CALIBRAÇÃO VR</h2>
+
+        <div class="config">
+            <label>
+                Distância dos olhos (IPD)
+                <span id="ipdValor">64 mm</span>
+            </label>
+            <input id="ipd" type="range"
+                min="45" max="80" value="64">
+        </div>
+
+        <div class="config">
+            <label>
+                Zoom
+                <span id="zoomValor">1.00x</span>
+            </label>
+            <input id="zoom" type="range"
+                min="0.5" max="2" step="0.05" value="1">
+        </div>
+
+        <button id="recentralizar">
+            RECENTRALIZAR VISÃO
+        </button>
+
+        <div id="status">
+            Sistema aguardando inicialização.
+        </div>
+
+        <p>
+            A: selecionar | B: menu<br>
+            Analógico esquerdo: movimentar<br>
+            Analógico direito: girar
+        </p>
+
     </div>
+
 </div>
 
 <script type="module">
 
 import * as THREE from "three";
 
-// =================================
-// CONFIGURAÇÕES
-// =================================
+// ==========================================
+// 1. CONFIGURAÇÃO PRINCIPAL
+// ==========================================
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x030710);
-scene.fog = new THREE.Fog(0x030710, 12, 32);
+const canvas = document.getElementById("vr");
 
 const renderer = new THREE.WebGLRenderer({
-    canvas: document.getElementById("vr"),
-    antialias: true,
+    canvas,
+    antialias: false,
     powerPreference: "high-performance"
 });
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 1.25)
+);
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x030710);
+
+scene.fog = new THREE.Fog(
+    0x030710, 13, 30
+);
 
 const cameraCentral = new THREE.PerspectiveCamera(
     75, 1, 0.1, 100
@@ -166,48 +257,26 @@ const cameraCentral = new THREE.PerspectiveCamera(
 
 cameraCentral.position.set(0, 1.65, 0);
 
-// Câmeras dos olhos
+const cameraLeft = new THREE.PerspectiveCamera();
+const cameraRight = new THREE.PerspectiveCamera();
 
-const cameraLeft = cameraCentral.clone();
-const cameraRight = cameraCentral.clone();
+let ipd = 0.064;
+let zoom = 1;
 
-const IPD = 0.064;
-
-const olhoEsquerdo = new THREE.Vector3(-IPD / 2, 0, 0);
-const olhoDireito = new THREE.Vector3(IPD / 2, 0, 0);
-
-// =================================
-// ILUMINAÇÃO
-// =================================
-
-scene.add(new THREE.AmbientLight(0x7899bb, 1.2));
-
-const luzPrincipal = new THREE.PointLight(
-    0x18bfff, 18, 18
-);
-luzPrincipal.position.set(0, 2.7, -3);
-scene.add(luzPrincipal);
-
-const luzSecundaria = new THREE.PointLight(
-    0x0066ff, 12, 15
-);
-luzSecundaria.position.set(-3, 2, 1);
-scene.add(luzSecundaria);
-
-// =================================
-// MATERIAIS
-// =================================
+// ==========================================
+// 2. MATERIAIS
+// ==========================================
 
 const parede = new THREE.MeshStandardMaterial({
     color: 0x101b2a,
     metalness: 0.8,
-    roughness: 0.35
+    roughness: 0.4
 });
 
 const pisoMaterial = new THREE.MeshStandardMaterial({
     color: 0x090f19,
-    metalness: 0.85,
-    roughness: 0.25
+    metalness: 0.8,
+    roughness: 0.3
 });
 
 const neon = new THREE.MeshStandardMaterial({
@@ -216,28 +285,51 @@ const neon = new THREE.MeshStandardMaterial({
     emissiveIntensity: 2
 });
 
-// =================================
-// CONSTRUÇÃO DA SALA
-// =================================
+// ==========================================
+// 3. ILUMINAÇÃO
+// ==========================================
+
+scene.add(
+    new THREE.AmbientLight(0x7899bb, 1.2)
+);
+
+const luzPrincipal = new THREE.PointLight(
+    0x18bfff, 16, 18
+);
+
+luzPrincipal.position.set(0, 2.7, -3);
+
+scene.add(luzPrincipal);
+
+const luzSecundaria = new THREE.PointLight(
+    0x0066ff, 10, 15
+);
+
+luzSecundaria.position.set(-3, 2, 1);
+
+scene.add(luzSecundaria);
+
+// ==========================================
+// 4. CONSTRUÇÃO DA SALA
+// ==========================================
 
 function bloco(w, h, d, material, x, y, z) {
+
     const mesh = new THREE.Mesh(
         new THREE.BoxGeometry(w, h, d),
         material
     );
 
     mesh.position.set(x, y, z);
+
     scene.add(mesh);
 
     return mesh;
 }
 
-// Piso
+// Piso e teto
 
 bloco(10, 0.2, 12, pisoMaterial, 0, -0.1, -2);
-
-// Teto
-
 bloco(10, 0.2, 12, parede, 0, 3.5, -2);
 
 // Paredes laterais
@@ -245,14 +337,15 @@ bloco(10, 0.2, 12, parede, 0, 3.5, -2);
 bloco(0.2, 3.5, 12, parede, -5, 1.65, -2);
 bloco(0.2, 3.5, 12, parede, 5, 1.65, -2);
 
-// Parede de fundo
+// Fundo
 
 bloco(10, 3.5, 0.2, parede, 0, 1.65, -8);
 
-// Moldura luminosa
+// Molduras luminosas
 
 bloco(0.05, 3.1, 0.05, neon, -4.7, 1.7, -7.8);
 bloco(0.05, 3.1, 0.05, neon, 4.7, 1.7, -7.8);
+
 bloco(9.4, 0.05, 0.05, neon, 0, 3.15, -7.8);
 
 // Linhas do piso
@@ -261,18 +354,18 @@ for (let i = -4; i <= 4; i += 2) {
     bloco(0.025, 0.025, 10, neon, i, 0.015, -2);
 }
 
-// =================================
-// PAINEL CENTRAL
-// =================================
-
-// Criar painel usando textura
+// ==========================================
+// 5. PAINEL CENTRAL
+// ==========================================
 
 function criarPainel() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1024;
-    canvas.height = 512;
 
-    const ctx = canvas.getContext("2d");
+    const c = document.createElement("canvas");
+
+    c.width = 1024;
+    c.height = 512;
+
+    const ctx = c.getContext("2d");
 
     ctx.fillStyle = "#071522";
     ctx.fillRect(0, 0, 1024, 512);
@@ -300,10 +393,10 @@ function criarPainel() {
     ctx.font = "22px Arial";
     ctx.fillText("SELECIONE UMA EXPERIENCIA", 65, 365);
 
-    const texture = new THREE.CanvasTexture(canvas);
+    const textura = new THREE.CanvasTexture(c);
 
     const material = new THREE.MeshBasicMaterial({
-        map: texture,
+        map: textura,
         side: THREE.DoubleSide
     });
 
@@ -313,23 +406,26 @@ function criarPainel() {
     );
 
     tela.position.set(0, 2.15, -7.65);
+
     scene.add(tela);
 }
 
 criarPainel();
 
-// =================================
-// BOTÕES 3D
-// =================================
+// ==========================================
+// 6. BOTÕES INTERATIVOS 3D
+// ==========================================
 
 const interativos = [];
 
 function criarBotao(texto, x, acao) {
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 160;
 
-    const ctx = canvas.getContext("2d");
+    const c = document.createElement("canvas");
+
+    c.width = 512;
+    c.height = 160;
+
+    const ctx = c.getContext("2d");
 
     ctx.fillStyle = "#102c40";
     ctx.fillRect(0, 0, 512, 160);
@@ -341,13 +437,14 @@ function criarBotao(texto, x, acao) {
     ctx.fillStyle = "white";
     ctx.font = "bold 36px Arial";
     ctx.textAlign = "center";
+
     ctx.fillText(texto, 256, 95);
 
-    const texture = new THREE.CanvasTexture(canvas);
+    const textura = new THREE.CanvasTexture(c);
 
     const material = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true
+        map: textura,
+        side: THREE.DoubleSide
     });
 
     const botao = new THREE.Mesh(
@@ -360,6 +457,7 @@ function criarBotao(texto, x, acao) {
     botao.userData.acao = acao;
 
     scene.add(botao);
+
     interativos.push(botao);
 
     return botao;
@@ -374,16 +472,17 @@ criarBotao("CINEMA", 0, () => {
 });
 
 criarBotao("CONFIG", 1.65, () => {
-    mostrarMensagem("Configurações selecionadas");
+    abrirMenu();
 });
 
-// =================================
-// ELEMENTOS DECORATIVOS
-// =================================
+// ==========================================
+// 7. ELEMENTOS DECORATIVOS
+// ==========================================
 
 for (let i = 0; i < 8; i++) {
+
     const esfera = new THREE.Mesh(
-        new THREE.SphereGeometry(0.045, 12, 12),
+        new THREE.SphereGeometry(0.045, 10, 10),
         neon
     );
 
@@ -396,63 +495,92 @@ for (let i = 0; i < 8; i++) {
     scene.add(esfera);
 }
 
-// =================================
-// HEAD TRACKING
-// =================================
+// ==========================================
+// 8. HEAD TRACKING
+// ==========================================
 
 let sensorAtivo = false;
-let alpha = 0;
-let beta = 0;
-let gamma = 0;
+let sensorRecebido = false;
 
-const euler = new THREE.Euler(0, 0, 0, "YXZ");
-const quaternionTela = new THREE.Quaternion();
-const quaternionCamera = new THREE.Quaternion();
+let calibracaoSensor = new THREE.Quaternion();
+
+const orientacaoAlvo = new THREE.Quaternion();
+const orientacaoSuave = new THREE.Quaternion();
+
+const orientacaoReferencia = new THREE.Quaternion();
+
+const eulerSensor = new THREE.Euler(0, 0, 0, "YXZ");
 
 const eixoZ = new THREE.Vector3(0, 0, 1);
 const eixoX = new THREE.Vector3(1, 0, 0);
+const eixoY = new THREE.Vector3(0, 1, 0);
+
+const ajusteTela = new THREE.Quaternion();
+const ajusteDispositivo = new THREE.Quaternion();
+
+const quaternionManual = new THREE.Quaternion();
+
+ajusteDispositivo.setFromAxisAngle(
+    eixoX,
+    -Math.PI / 2
+);
+
+let manualYaw = 0;
+let manualPitch = 0;
 
 function orientacao(evento) {
+
     if (
         evento.alpha === null ||
         evento.beta === null ||
         evento.gamma === null
     ) return;
 
-    alpha = THREE.MathUtils.degToRad(evento.alpha);
-    beta = THREE.MathUtils.degToRad(evento.beta);
-    gamma = THREE.MathUtils.degToRad(evento.gamma);
-
-    euler.set(beta, alpha, -gamma, "YXZ");
-
-    quaternionCamera.setFromEuler(euler);
-
-    const anguloTela = THREE.MathUtils.degToRad(
-        screen.orientation?.angle || 0
+    eulerSensor.set(
+        THREE.MathUtils.degToRad(evento.beta),
+        THREE.MathUtils.degToRad(evento.alpha),
+        THREE.MathUtils.degToRad(-evento.gamma),
+        "YXZ"
     );
 
-    quaternionTela.setFromAxisAngle(eixoZ, -anguloTela);
+    const qSensor = new THREE.Quaternion()
+        .setFromEuler(eulerSensor);
 
-    quaternionCamera.multiply(quaternionTela);
+    const anguloTela =
+        screen.orientation?.angle ??
+        window.orientation ??
+        0;
 
-    quaternionCamera.multiply(
-        new THREE.Quaternion().setFromAxisAngle(
-            eixoX, -Math.PI / 2
-        )
+    ajusteTela.setFromAxisAngle(
+        eixoZ,
+        -THREE.MathUtils.degToRad(anguloTela)
     );
 
-    cameraCentral.quaternion.copy(quaternionCamera);
+    orientacaoAlvo.copy(qSensor)
+        .multiply(ajusteDispositivo)
+        .multiply(ajusteTela);
+
+    if (!sensorRecebido) {
+
+        orientacaoReferencia.copy(orientacaoAlvo);
+
+        sensorRecebido = true;
+    }
 }
 
 async function ativarSensor() {
+
     try {
+
         if (typeof DeviceOrientationEvent === "undefined") {
             throw new Error("Sensor não disponível.");
         }
 
         if (
-            typeof DeviceOrientationEvent.requestPermission === "function"
+            typeof DeviceOrientationEvent.requestPermission ===
+            "function"
         ) {
+
             const permissao =
                 await DeviceOrientationEvent.requestPermission();
 
@@ -461,6 +589,11 @@ async function ativarSensor() {
             }
         }
 
+        window.removeEventListener(
+            "deviceorientation",
+            orientacao
+        );
+
         window.addEventListener(
             "deviceorientation",
             orientacao,
@@ -468,26 +601,104 @@ async function ativarSensor() {
         );
 
         sensorAtivo = true;
-        mostrarMensagem("Head Tracking ativado!");
+
+        mostrarMensagem("Aguardando dados do sensor...");
 
     } catch (erro) {
+
         mostrarMensagem(erro.message);
+
     }
 }
 
-// =================================
-// INTERAÇÃO COM OLHAR
-// =================================
+// ==========================================
+// 9. RECENTRALIZAR VISÃO
+// ==========================================
+
+function recentralizar() {
+
+    if (!sensorRecebido) {
+        mostrarMensagem("Aguardando sensor.");
+        return;
+    }
+
+    calibracaoSensor.copy(orientacaoAlvo).invert();
+
+    orientacaoSuave.identity();
+
+    manualYaw = 0;
+    manualPitch = 0;
+
+    mostrarMensagem("Visão recentralizada.");
+}
+
+document.getElementById("recentralizar").onclick =
+    recentralizar;
+
+// ==========================================
+// 10. CONTROLE DA VISÃO
+// ==========================================
+
+const rotacaoYaw = new THREE.Quaternion();
+const rotacaoPitch = new THREE.Quaternion();
+
+function atualizarVisao(delta) {
+
+    if (sensorAtivo && sensorRecebido) {
+
+        const relativa = new THREE.Quaternion()
+            .copy(calibracaoSensor)
+            .multiply(orientacaoAlvo);
+
+        orientacaoReferencia.slerp(
+            relativa,
+            1 - Math.pow(0.001, delta)
+        );
+
+    } else {
+
+        orientacaoReferencia.identity();
+
+    }
+
+    rotacaoYaw.setFromAxisAngle(
+        eixoY,
+        manualYaw
+    );
+
+    rotacaoPitch.setFromAxisAngle(
+        eixoX,
+        manualPitch
+    );
+
+    const orientacaoFinal = new THREE.Quaternion()
+        .copy(rotacaoYaw)
+        .multiply(orientacaoReferencia)
+        .multiply(rotacaoPitch);
+
+    cameraCentral.quaternion.copy(orientacaoFinal);
+}
+
+// ==========================================
+// 11. RAYCASTER / SELEÇÃO PELO OLHAR
+// ==========================================
 
 const raycaster = new THREE.Raycaster();
+
 const centro = new THREE.Vector2(0, 0);
 
 let alvoAtual = null;
 
 function verificarOlhar() {
-    raycaster.setFromCamera(centro, cameraCentral);
 
-    const encontrados = raycaster.intersectObjects(interativos);
+    raycaster.setFromCamera(
+        centro,
+        cameraCentral
+    );
+
+    const encontrados = raycaster.intersectObjects(
+        interativos
+    );
 
     alvoAtual = encontrados.length
         ? encontrados[0].object
@@ -495,149 +706,342 @@ function verificarOlhar() {
 }
 
 function selecionar() {
+
     if (alvoAtual?.userData.acao) {
         alvoAtual.userData.acao();
     }
 }
 
-window.addEventListener("click", selecionar);
+canvas.addEventListener("click", selecionar);
 
-window.addEventListener("keydown", e => {
-    if (e.key === "Enter" || e.key === " ") {
+// ==========================================
+// 12. GAMEPAD
+// ==========================================
+
+let botaoAAnterior = false;
+let botaoBAnterior = false;
+
+function eixo(gamepad, indice) {
+
+    const valor = gamepad.axes[indice] || 0;
+
+    return Math.abs(valor) < 0.15 ? 0 : valor;
+}
+
+function verificarControle(delta) {
+
+    const controles = navigator.getGamepads?.() || [];
+
+    const gamepad = Array.from(controles).find(g => g);
+
+    if (!gamepad) return;
+
+    // BOTÃO A: selecionar
+
+    const botaoA =
+        gamepad.buttons[0]?.pressed || false;
+
+    if (botaoA && !botaoAAnterior) {
         selecionar();
     }
 
-    if (e.key === "Escape") {
-        document.getElementById("menu")
-            .classList.remove("oculto");
+    botaoAAnterior = botaoA;
+
+    // BOTÃO B: menu
+
+    const botaoB =
+        gamepad.buttons[1]?.pressed || false;
+
+    if (botaoB && !botaoBAnterior) {
+        alternarMenu();
     }
-});
 
-// =================================
-// CONTROLE BLUETOOTH
-// =================================
+    botaoBAnterior = botaoB;
 
-let gamepadDebounce = false;
+    // ANALÓGICO ESQUERDO: andar
 
-function verificarControle() {
-    const controles = navigator.getGamepads?.() || [];
+    const lx = eixo(gamepad, 0);
+    const ly = eixo(gamepad, 1);
 
-    for (const controle of controles) {
-        if (!controle) continue;
+    const direcao = new THREE.Vector3(
+        -Math.sin(manualYaw),
+        0,
+        -Math.cos(manualYaw)
+    );
 
-        if (controle.buttons[0]?.pressed) {
-            if (!gamepadDebounce) {
-                selecionar();
-                gamepadDebounce = true;
-            }
-        } else {
-            gamepadDebounce = false;
-        }
+    const direita = new THREE.Vector3(
+        Math.cos(manualYaw),
+        0,
+        -Math.sin(manualYaw)
+    );
+
+    const movimento = new THREE.Vector3();
+
+    movimento.addScaledVector(direita, lx);
+    movimento.addScaledVector(direcao, -ly);
+
+    if (movimento.lengthSq() > 1) {
+        movimento.normalize();
     }
+
+    cameraCentral.position.addScaledVector(
+        movimento,
+        2.5 * delta
+    );
+
+    // LIMITES DA SALA
+
+    cameraCentral.position.x =
+        THREE.MathUtils.clamp(
+            cameraCentral.position.x,
+            -4.5, 4.5
+        );
+
+    cameraCentral.position.z =
+        THREE.MathUtils.clamp(
+            cameraCentral.position.z,
+            -7.5, 3.5
+        );
+
+    // ANALÓGICO DIREITO: olhar
+
+    const rx = eixo(gamepad, 2);
+    const ry = eixo(gamepad, 3);
+
+    manualYaw -= rx * delta * 2;
+    manualPitch -= ry * delta * 1.5;
+
+    manualPitch = THREE.MathUtils.clamp(
+        manualPitch,
+        -0.7,
+        0.7
+    );
 }
 
-window.addEventListener("gamepadconnected", () => {
-    mostrarMensagem("Controle conectado!");
-});
+window.addEventListener(
+    "gamepadconnected",
+    () => mostrarMensagem("Controle conectado!")
+);
 
-// =================================
-// MENSAGENS
-// =================================
+window.addEventListener(
+    "gamepaddisconnected",
+    () => mostrarMensagem("Controle desconectado.")
+);
 
-let mensagemAnterior = null;
+// ==========================================
+// 13. INTERFACE
+// ==========================================
+
+const menu = document.getElementById("menu");
+
+function abrirMenu() {
+    menu.classList.remove("oculto");
+}
+
+function fecharMenu() {
+    menu.classList.add("oculto");
+}
+
+function alternarMenu() {
+
+    if (menu.classList.contains("oculto")) {
+        abrirMenu();
+    } else {
+        fecharMenu();
+    }
+
+}
 
 function mostrarMensagem(texto) {
-    const status = document.getElementById("status");
-    if (status) {
-        status.textContent = texto;
-    }
 
-    mensagemAnterior = texto;
+    document.getElementById("status").textContent =
+        texto;
+
 }
 
-// =================================
-// ENTRADA NA EXPERIÊNCIA
-// =================================
+// ==========================================
+// 14. CALIBRAÇÃO IPD E ZOOM
+// ==========================================
 
-document.getElementById("sensor").onclick = ativarSensor;
+document.getElementById("ipd").addEventListener(
+    "input",
+    (e) => {
 
-document.getElementById("entrar").onclick = async () => {
-    document.getElementById("menu")
-        .classList.add("oculto");
+        ipd = Number(e.target.value) / 1000;
 
-    document.getElementById("hud")
-        .classList.remove("oculto");
+        document.getElementById("ipdValor")
+            .textContent = e.target.value + " mm";
 
-    document.getElementById("reticulo")
-        .classList.remove("oculto");
-
-    if (screen.orientation?.lock) {
-        screen.orientation.lock("landscape").catch(() => {});
     }
+);
 
-    try {
-        if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen();
+document.getElementById("zoom").addEventListener(
+    "input",
+    (e) => {
+
+        zoom = Number(e.target.value);
+
+        document.getElementById("zoomValor")
+            .textContent = zoom.toFixed(2) + "x";
+
+    }
+);
+
+// ==========================================
+// 15. ENTRADA NA EXPERIÊNCIA
+// ==========================================
+
+document.getElementById("sensor").onclick =
+    ativarSensor;
+
+document.getElementById("entrar").onclick =
+    async () => {
+
+        fecharMenu();
+
+        document.getElementById("hud")
+            .classList.remove("oculto");
+
+        document.getElementById("reticulo")
+            .classList.remove("oculto");
+
+        try {
+
+            if (!document.fullscreenElement) {
+                await document.documentElement
+                    .requestFullscreen();
+            }
+
+        } catch (erro) {
+
+            mostrarMensagem("Tela cheia indisponível.");
+
         }
-    } catch (e) {
-        console.log("Tela cheia indisponível", e);
-    }
-};
 
-// =================================
-// RENDERIZAÇÃO ESTEREOSCÓPICA
-// =================================
+        if (screen.orientation?.lock) {
+
+            screen.orientation.lock("landscape")
+                .catch(() => {});
+
+        }
+
+        mostrarMensagem("Bem-vindo à sala virtual.");
+
+    };
+
+document.addEventListener("keydown", (e) => {
+
+    if (e.key === "Escape") {
+        alternarMenu();
+    }
+
+    if (e.key === "Enter") {
+        selecionar();
+    }
+
+});
+
+// ==========================================
+// 16. RENDERIZAÇÃO VR
+// ==========================================
+
+const posicaoOlho = new THREE.Vector3();
 
 function animar() {
+
     requestAnimationFrame(animar);
+
+    const delta = Math.min(
+        clock.getDelta(),
+        0.05
+    );
 
     const largura = window.innerWidth;
     const altura = window.innerHeight;
+
     const metade = Math.floor(largura / 2);
 
+    atualizarVisao(delta);
+
+    verificarControle(delta);
+
+    verificarOlhar();
+
+    // Movimento de iluminação
+
+    luzPrincipal.intensity =
+        16 + Math.sin(performance.now() * 0.001) * 2;
+
+    // Câmeras independentes
+
+    cameraLeft.fov =
+        cameraCentral.fov / zoom;
+
+    cameraRight.fov =
+        cameraCentral.fov / zoom;
+
     cameraLeft.aspect = metade / altura;
-    cameraRight.aspect = metade / altura;
+    cameraRight.aspect = (largura - metade) / altura;
 
-    cameraLeft.updateProjectionMatrix();
-    cameraRight.updateProjectionMatrix();
+    cameraLeft.position.copy(cameraCentral.position);
 
-    cameraLeft.position.copy(cameraCentral.position)
-        .add(olhoEsquerdo);
+    posicaoOlho.set(-ipd / 2, 0, 0)
+        .applyQuaternion(cameraCentral.quaternion);
 
-    cameraRight.position.copy(cameraCentral.position)
-        .add(olhoDireito);
+    cameraLeft.position.add(posicaoOlho);
+
+    cameraRight.position.copy(cameraCentral.position);
+
+    posicaoOlho.set(ipd / 2, 0, 0)
+        .applyQuaternion(cameraCentral.quaternion);
+
+    cameraRight.position.add(posicaoOlho);
 
     cameraLeft.quaternion.copy(cameraCentral.quaternion);
     cameraRight.quaternion.copy(cameraCentral.quaternion);
 
-    // Leve animação ambiental
-    luzPrincipal.intensity = 16 + Math.sin(
-        performance.now() * 0.001
-    ) * 2;
+    cameraLeft.updateProjectionMatrix();
+    cameraRight.updateProjectionMatrix();
 
-    verificarOlhar();
-    verificarControle();
+    // Renderização do olho esquerdo
 
     renderer.setScissorTest(true);
 
-    // OLHO ESQUERDO
-
     renderer.setViewport(0, 0, metade, altura);
     renderer.setScissor(0, 0, metade, altura);
+
     renderer.render(scene, cameraLeft);
 
-    // OLHO DIREITO
+    // Renderização do olho direito
 
-    renderer.setViewport(metade, 0, largura - metade, altura);
-    renderer.setScissor(metade, 0, largura - metade, altura);
+    renderer.setViewport(
+        metade, 0, largura - metade, altura
+    );
+
+    renderer.setScissor(
+        metade, 0, largura - metade, altura
+    );
+
     renderer.render(scene, cameraRight);
 
     renderer.setScissorTest(false);
+
 }
 
+// ==========================================
+// 17. RESPONSIVIDADE
+// ==========================================
+
 window.addEventListener("resize", () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
 });
+
+const clock = new THREE.Clock();
 
 animar();
 
